@@ -1162,28 +1162,81 @@
                 taskList.appendChild(taskItem);
             }
 
-            // 将恢复的任务移到未完成任务的最顶部的函数
-            function moveToUncompleted(taskItem) {
-                // 找到第一个未完成的任务
-                const allTasks = Array.from(taskList.querySelectorAll('.task-item'));
-                const firstUncompletedTask = allTasks.find(task => task.dataset.completed === 'false' && task !== taskItem);
+            // 获取优先级的数值（用于排序）
+            function getPriorityValue(priority) {
+                const priorityMap = { 'P0': 0, 'P1': 1, 'P2': 2 };
+                return priorityMap[priority] || 999;
+            }
+
+            // 按优先级插入任务的函数
+            function insertTaskByPriority(taskItem) {
+                const taskPriority = taskItem.dataset.priority;
+                const taskPriorityValue = getPriorityValue(taskPriority);
                 
-                if (firstUncompletedTask) {
-                    // 如果有其他未完成的任务，插入到第一个未完成任务之前
-                    taskList.insertBefore(taskItem, firstUncompletedTask);
+                // 获取所有未完成的任务
+                const allTasks = Array.from(taskList.querySelectorAll('.task-item'));
+                const uncompletedTasks = allTasks.filter(task => task.dataset.completed === 'false');
+                
+                // 找到第一个优先级低于当前任务的位置
+                let insertBeforeTask = null;
+                for (let i = 0; i < uncompletedTasks.length; i++) {
+                    const otherPriorityValue = getPriorityValue(uncompletedTasks[i].dataset.priority);
+                    if (otherPriorityValue > taskPriorityValue) {
+                        insertBeforeTask = uncompletedTasks[i];
+                        break;
+                    }
+                }
+                
+                if (insertBeforeTask) {
+                    // 插入到找到的位置之前
+                    taskList.insertBefore(taskItem, insertBeforeTask);
                 } else {
-                    // 如果没有其他未完成的任务，查找第一个已完成的任务
+                    // 如果没有找到，说明当前任务优先级最低，插入到已完成任务之前
                     const firstCompletedTask = allTasks.find(task => task.dataset.completed === 'true');
                     if (firstCompletedTask) {
                         taskList.insertBefore(taskItem, firstCompletedTask);
                     } else {
-                        // 如果列表中只有这一个任务，移到最前面
+                        // 如果没有已完成的任务，添加到列表最后
                         const emptyState = taskList.querySelector('.empty-state');
-                        if (emptyState) {
+                        if (emptyState && emptyState.style.display !== 'none') {
                             taskList.insertBefore(taskItem, emptyState.nextSibling);
                         } else {
-                            taskList.insertBefore(taskItem, taskList.firstChild);
+                            taskList.appendChild(taskItem);
                         }
+                    }
+                }
+            }
+
+            // 将恢复的任务移到未完成任务的正确位置（按优先级排序）
+            function moveToUncompleted(taskItem) {
+                const taskPriority = taskItem.dataset.priority;
+                const taskPriorityValue = getPriorityValue(taskPriority);
+                
+                // 获取所有未完成的任务
+                const allTasks = Array.from(taskList.querySelectorAll('.task-item'));
+                const uncompletedTasks = allTasks.filter(task => task.dataset.completed === 'false' && task !== taskItem);
+                
+                // 找到第一个优先级低于或等于当前任务的位置
+                let insertBeforeTask = null;
+                for (let i = 0; i < uncompletedTasks.length; i++) {
+                    const otherPriorityValue = getPriorityValue(uncompletedTasks[i].dataset.priority);
+                    if (otherPriorityValue > taskPriorityValue) {
+                        insertBeforeTask = uncompletedTasks[i];
+                        break;
+                    }
+                }
+                
+                if (insertBeforeTask) {
+                    // 插入到找到的位置之前
+                    taskList.insertBefore(taskItem, insertBeforeTask);
+                } else {
+                    // 如果没有找到，说明当前任务优先级最低，插入到已完成任务之前
+                    const firstCompletedTask = allTasks.find(task => task.dataset.completed === 'true');
+                    if (firstCompletedTask) {
+                        taskList.insertBefore(taskItem, firstCompletedTask);
+                    } else {
+                        // 如果没有已完成的任务，添加到列表最后
+                        taskList.appendChild(taskItem);
                     }
                 }
             }
@@ -1330,6 +1383,7 @@
 
                     // 更新任务文本、优先级和分类
                     taskTextContent.textContent = newText;
+                    const oldPriority = taskItem.dataset.priority;
                     priorityTag.className = 'priority-tag ' + newPriority.toLowerCase();
                     priorityTag.textContent = newPriority;
                     taskItem.dataset.priority = newPriority;
@@ -1342,6 +1396,14 @@
                     // 恢复文本显示
                     taskItem.replaceChild(taskTextSpan, editContainer);
                     taskActions.style.display = 'flex';
+
+                    // 如果优先级改变了，需要重新排序
+                    if (oldPriority !== newPriority && taskItem.dataset.completed === 'false') {
+                        // 移除任务
+                        taskItem.remove();
+                        // 按新优先级重新插入
+                        insertTaskByPriority(taskItem);
+                    }
 
                     // 保存任务列表到 localStorage
                     saveTasksToStorage();
@@ -1635,15 +1697,8 @@
                     // 已完成的任务添加到列表最后
                     taskList.appendChild(taskItem);
                 } else {
-                    // 未完成的任务插入到第一个已完成任务之前
-                    const allTasks = Array.from(taskList.querySelectorAll('.task-item'));
-                    const firstCompletedTask = allTasks.find(task => task.dataset.completed === 'true');
-                    
-                    if (firstCompletedTask) {
-                        taskList.insertBefore(taskItem, firstCompletedTask);
-                    } else {
-                        taskList.appendChild(taskItem);
-                    }
+                    // 未完成的任务按优先级插入
+                    insertTaskByPriority(taskItem);
                 }
             }
 
