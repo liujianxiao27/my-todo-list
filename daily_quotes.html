@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日名言展示器</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 页面整体样式 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* 主容器 */
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        /* 淡入动画 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 页面标题 */
+        .title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 40px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        /* 标题下划线装饰 */
+        .title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        /* 名言展示区域 */
+        .quote-container {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 40px;
+            position: relative;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* 左上角引号装饰 */
+        .quote-container::before {
+            content: '"';
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 60px;
+            color: rgba(102, 126, 234, 0.2);
+            font-family: Georgia, serif;
+            line-height: 1;
+        }
+
+        /* 右下角引号装饰 */
+        .quote-container::after {
+            content: '"';
+            position: absolute;
+            bottom: 10px;
+            right: 20px;
+            font-size: 60px;
+            color: rgba(102, 126, 234, 0.2);
+            font-family: Georgia, serif;
+            line-height: 1;
+        }
+
+        /* 名言文本 */
+        .quote-text {
+            font-size: 24px;
+            line-height: 1.6;
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 作者信息 */
+        .quote-author {
+            font-size: 18px;
+            color: #667eea;
+            text-align: right;
+            font-style: italic;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 加载状态 */
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        /* 加载动画 */
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% {
+                content: '.';
+            }
+            40% {
+                content: '..';
+            }
+            60%, 100% {
+                content: '...';
+            }
+        }
+
+        /* 刷新按钮 */
+        .refresh-button {
+            display: block;
+            margin: 30px auto 0;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .refresh-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .refresh-button:active {
+            transform: translateY(0);
+        }
+
+        /* 页脚信息 */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #718096;
+            font-size: 14px;
+        }
+
+        /* 响应式设计 - 平板 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px;
+            }
+
+            .title {
+                font-size: 28px;
+                margin-bottom: 30px;
+            }
+
+            .quote-container {
+                padding: 30px;
+            }
+
+            .quote-text {
+                font-size: 20px;
+            }
+
+            .quote-author {
+                font-size: 16px;
+            }
+        }
+
+        /* 响应式设计 - 手机 */
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 25px;
+            }
+
+            .title {
+                font-size: 24px;
+                margin-bottom: 25px;
+            }
+
+            .quote-container {
+                padding: 25px;
+                min-height: 180px;
+            }
+
+            .quote-container::before,
+            .quote-container::after {
+                font-size: 40px;
+            }
+
+            .quote-text {
+                font-size: 18px;
+            }
+
+            .quote-author {
+                font-size: 14px;
+            }
+
+            .refresh-button {
+                padding: 10px 25px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 页面标题 -->
+        <h1 class="title">每日名言展示</h1>
+
+        <!-- 名言展示区域 -->
+        <div class="quote-container">
+            <!-- 加载状态 -->
+            <div class="loading" id="loading">正在加载名言</div>
+            
+            <!-- 名言内容（初始隐藏） -->
+            <div id="quote-content" style="display: none;">
+                <p class="quote-text" id="quote-text"></p>
+                <p class="quote-author" id="quote-author"></p>
+            </div>
+        </div>
+
+        <!-- 刷新按钮 -->
+        <button class="refresh-button" id="refresh-btn">🔄 换一句</button>
+
+        <!-- 页脚信息 -->
+        <div class="footer">
+            每天一句名言，启迪智慧人生
+        </div>
+    </div>
+
+    <script>
+        // 获取页面元素
+        const loadingElement = document.getElementById('loading');
+        const quoteContent = document.getElementById('quote-content');
+        const quoteText = document.getElementById('quote-text');
+        const quoteAuthor = document.getElementById('quote-author');
+        const refreshButton = document.getElementById('refresh-btn');
+
+        // 100条名人名言数据库
+        const quotes = [
+            { text: "生活就像骑自行车，要保持平衡就得不断前进。", author: "阿尔伯特·爱因斯坦" },
+            { text: "成功不是终点，失败也不是终结，唯有勇气才是永恒。", author: "温斯顿·丘吉尔" },
+            { text: "你的时间有限，不要浪费在重复他人的生活上。", author: "史蒂夫·乔布斯" },
+            { text: "黑夜无论怎样悠长，白昼总会到来。", author: "威廉·莎士比亚" },
+            { text: "教育的根是苦的，但其果实是甜的。", author: "亚里士多德" },
+            { text: "天才就是百分之一的灵感加上百分之九十九的汗水。", author: "托马斯·爱迪生" },
+            { text: "读书破万卷，下笔如有神。", author: "杜甫" },
+            { text: "路漫漫其修远兮，吾将上下而求索。", author: "屈原" },
+            { text: "己所不欲，勿施于人。", author: "孔子" },
+            { text: "学而不思则罔，思而不学则殆。", author: "孔子" },
+            { text: "知之者不如好之者，好之者不如乐之者。", author: "孔子" },
+            { text: "三人行，必有我师焉。", author: "孔子" },
+            { text: "书山有路勤为径，学海无涯苦作舟。", author: "韩愈" },
+            { text: "业精于勤，荒于嬉；行成于思，毁于随。", author: "韩愈" },
+            { text: "天行健，君子以自强不息。", author: "周易" },
+            { text: "不积跬步，无以至千里；不积小流，无以成江海。", author: "荀子" },
+            { text: "锲而舍之，朽木不折；锲而不舍，金石可镂。", author: "荀子" },
+            { text: "千里之行，始于足下。", author: "老子" },
+            { text: "知人者智，自知者明。", author: "老子" },
+            { text: "天下难事，必作于易；天下大事，必作于细。", author: "老子" },
+            { text: "宝剑锋从磨砺出，梅花香自苦寒来。", author: "古训" },
+            { text: "少壮不努力，老大徒伤悲。", author: "汉乐府" },
+            { text: "黑发不知勤学早，白首方悔读书迟。", author: "颜真卿" },
+            { text: "纸上得来终觉浅，绝知此事要躬行。", author: "陆游" },
+            { text: "问渠那得清如许，为有源头活水来。", author: "朱熹" },
+            { text: "长风破浪会有时，直挂云帆济沧海。", author: "李白" },
+            { text: "天生我材必有用，千金散尽还复来。", author: "李白" },
+            { text: "会当凌绝顶，一览众山小。", author: "杜甫" },
+            { text: "海内存知己，天涯若比邻。", author: "王勃" },
+            { text: "落霞与孤鹜齐飞，秋水共长天一色。", author: "王勃" },
+            { text: "先天下之忧而忧，后天下之乐而乐。", author: "范仲淹" },
+            { text: "人生自古谁无死，留取丹心照汗青。", author: "文天祥" },
+            { text: "横眉冷对千夫指，俯首甘为孺子牛。", author: "鲁迅" },
+            { text: "时间就像海绵里的水，只要愿挤，总还是有的。", author: "鲁迅" },
+            { text: "世上本没有路，走的人多了，也便成了路。", author: "鲁迅" },
+            { text: "哪里有天才，我是把别人喝咖啡的工夫都用在工作上了。", author: "鲁迅" },
+            { text: "为中华之崛起而读书。", author: "周恩来" },
+            { text: "世界上最宽阔的是海洋，比海洋更宽阔的是天空，比天空更宽阔的是人的心灵。", author: "雨果" },
+            { text: "人的一生应当这样度过：当回忆往事的时候，他不会因为虚度年华而悔恨。", author: "奥斯特洛夫斯基" },
+            { text: "生命诚可贵，爱情价更高；若为自由故，两者皆可抛。", author: "裴多菲" },
+            { text: "一个人的价值，应该看他贡献什么，而不应当看他取得什么。", author: "爱因斯坦" },
+            { text: "想象力比知识更重要。", author: "爱因斯坦" },
+            { text: "成功的秘诀在于坚持自己的目标和信念。", author: "本杰明·迪斯雷利" },
+            { text: "伟大的作品不是靠力量，而是靠坚持来完成的。", author: "塞缪尔·约翰逊" },
+            { text: "只有经历过地狱般的磨练，才能炼出创造天堂的力量。", author: "泰戈尔" },
+            { text: "生如夏花之绚烂，死如秋叶之静美。", author: "泰戈尔" },
+            { text: "世界以痛吻我，要我报之以歌。", author: "泰戈尔" },
+            { text: "你今天站在哪里并不重要，重要的是你下一步迈向哪里。", author: "佚名" },
+            { text: "机会总是留给有准备的人。", author: "路易·巴斯德" },
+            { text: "成功是一个过程，并不是一个结果。", author: "佚名" },
+            { text: "失败乃成功之母。", author: "古训" },
+            { text: "有志者事竟成。", author: "古训" },
+            { text: "精诚所至，金石为开。", author: "古训" },
+            { text: "水滴石穿，绳锯木断。", author: "古训" },
+            { text: "勤能补拙是良训，一分辛苦一分才。", author: "华罗庚" },
+            { text: "聪明在于勤奋，天才在于积累。", author: "华罗庚" },
+            { text: "书籍是人类进步的阶梯。", author: "高尔基" },
+            { text: "我扑在书上，就像饥饿的人扑在面包上。", author: "高尔基" },
+            { text: "读一本好书，就是和许多高尚的人谈话。", author: "歌德" },
+            { text: "理想的书籍是智慧的钥匙。", author: "列夫·托尔斯泰" },
+            { text: "书是人类进步的阶梯，终生的伴侣，最诚挚的朋友。", author: "高尔基" },
+            { text: "活到老，学到老。", author: "古训" },
+            { text: "一寸光阴一寸金，寸金难买寸光阴。", author: "古训" },
+            { text: "莫等闲，白了少年头，空悲切。", author: "岳飞" },
+            { text: "盛年不重来，一日难再晨。", author: "陶渊明" },
+            { text: "明日复明日，明日何其多。我生待明日，万事成蹉跎。", author: "钱鹤滩" },
+            { text: "今日事今日毕。", author: "古训" },
+            { text: "合抱之木，生于毫末；九层之台，起于累土。", author: "老子" },
+            { text: "骐骥一跃，不能十步；驽马十驾，功在不舍。", author: "荀子" },
+            { text: "绳锯木断，水滴石穿。", author: "罗大经" },
+            { text: "冰冻三尺，非一日之寒。", author: "古训" },
+            { text: "失败是成功之母。", author: "古训" },
+            { text: "吃一堑，长一智。", author: "古训" },
+            { text: "人无远虑，必有近忧。", author: "孔子" },
+            { text: "凡事预则立，不预则废。", author: "礼记" },
+            { text: "机不可失，时不再来。", author: "古训" },
+            { text: "良药苦口利于病，忠言逆耳利于行。", author: "古训" },
+            { text: "满招损，谦受益。", author: "尚书" },
+            { text: "虚心使人进步，骄傲使人落后。", author: "毛泽东" },
+            { text: "世上无难事，只怕有心人。", author: "古训" },
+            { text: "有志不在年高，无志空长百岁。", author: "古训" },
+            { text: "志当存高远。", author: "诸葛亮" },
+            { text: "老骥伏枥，志在千里。", author: "曹操" },
+            { text: "穷且益坚，不坠青云之志。", author: "王勃" },
+            { text: "燕雀安知鸿鹄之志哉。", author: "司马迁" },
+            { text: "不飞则已，一飞冲天；不鸣则已，一鸣惊人。", author: "司马迁" },
+            { text: "人固有一死，或重于泰山，或轻于鸿毛。", author: "司马迁" },
+            { text: "士不可以不弘毅，任重而道远。", author: "论语" },
+            { text: "天将降大任于斯人也，必先苦其心志。", author: "孟子" },
+            { text: "生于忧患，死于安乐。", author: "孟子" },
+            { text: "富贵不能淫，贫贱不能移，威武不能屈。", author: "孟子" },
+            { text: "人生得意须尽欢，莫使金樽空对月。", author: "李白" },
+            { text: "抽刀断水水更流，举杯消愁愁更愁。", author: "李白" },
+            { text: "安能摧眉折腰事权贵，使我不得开心颜。", author: "李白" },
+            { text: "天生我材必有用，千金散尽还复来。", author: "李白" },
+            { text: "两岸猿声啼不住，轻舟已过万重山。", author: "李白" },
+            { text: "桃花潭水深千尺，不及汪伦送我情。", author: "李白" },
+            { text: "孤帆远影碧空尽，唯见长江天际流。", author: "李白" }
+        ];
+
+        // 记录上一次显示的名言索引，避免连续重复
+        let lastIndex = -1;
+
+        // 获取随机名言的函数
+        function getRandomQuote() {
+            // 生成随机索引
+            let randomIndex;
+            
+            // 如果只有一条名言，直接返回
+            if (quotes.length === 1) {
+                randomIndex = 0;
+            } else {
+                // 确保不会连续显示相同的名言
+                do {
+                    randomIndex = Math.floor(Math.random() * quotes.length);
+                } while (randomIndex === lastIndex);
+            }
+            
+            // 更新上一次的索引
+            lastIndex = randomIndex;
+            
+            // 返回选中的名言
+            return quotes[randomIndex];
+        }
+
+        // 显示名言的函数
+        function displayQuote() {
+            // 显示加载状态（模拟加载效果）
+            loadingElement.style.display = 'block';
+            quoteContent.style.display = 'none';
+
+            // 短暂延迟后显示名言（增加真实感）
+            setTimeout(() => {
+                // 获取随机名言
+                const quote = getRandomQuote();
+
+                // 更新页面内容
+                quoteText.textContent = quote.text;
+                quoteAuthor.textContent = `— ${quote.author}`;
+
+                // 隐藏加载状态，显示名言内容
+                loadingElement.style.display = 'none';
+                quoteContent.style.display = 'block';
+            }, 300);
+        }
+
+        // 页面加载时自动显示第一条名言
+        displayQuote();
+
+        // 点击刷新按钮时显示新的名言
+        refreshButton.addEventListener('click', function() {
+            // 添加按钮旋转动画
+            refreshButton.style.transform = 'rotate(360deg)';
+            refreshButton.style.transition = 'transform 0.6s ease';
+            
+            setTimeout(() => {
+                refreshButton.style.transform = 'rotate(0deg)';
+            }, 600);
+            
+            // 显示新的名言
+            displayQuote();
+        });
+    </script>
+</body>
+</html>
