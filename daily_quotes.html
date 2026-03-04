@@ -178,6 +178,238 @@
             transform: translateY(0);
         }
 
+        /* 按钮组容器 */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        /* 收藏按钮 */
+        .favorite-button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .favorite-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.6);
+        }
+
+        .favorite-button:active {
+            transform: translateY(0);
+        }
+
+        /* 查看收藏按钮 */
+        .view-favorites-button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        .view-favorites-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 172, 254, 0.6);
+        }
+
+        .view-favorites-button:active {
+            transform: translateY(0);
+        }
+
+        /* Toast 提示框 */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .toast.error {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+
+        /* 收藏列表模态框遮罩 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        /* 收藏列表模态框 */
+        .favorites-modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 模态框头部 */
+        .modal-header {
+            padding: 25px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+        }
+
+        .close-button:hover {
+            transform: scale(1.2);
+        }
+
+        /* 模态框内容 */
+        .modal-content {
+            padding: 30px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* 收藏列表 */
+        .favorites-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* 收藏项 */
+        .favorite-item {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            transition: transform 0.2s ease;
+        }
+
+        .favorite-item:hover {
+            transform: translateX(5px);
+        }
+
+        .favorite-item-text {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #2d3748;
+            margin-bottom: 10px;
+            padding-right: 40px;
+        }
+
+        .favorite-item-author {
+            font-size: 14px;
+            color: #667eea;
+            font-style: italic;
+        }
+
+        /* 删除按钮 */
+        .delete-button {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .delete-button:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #718096;
+        }
+
+        .empty-state-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .empty-state-text {
+            font-size: 18px;
+        }
+
         /* 页脚信息 */
         .footer {
             text-align: center;
@@ -243,8 +475,36 @@
                 font-size: 14px;
             }
 
-            .refresh-button {
+            .button-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .refresh-button,
+            .favorite-button,
+            .view-favorites-button {
                 padding: 10px 25px;
+                font-size: 14px;
+                width: 100%;
+            }
+
+            .modal-header {
+                padding: 20px;
+            }
+
+            .modal-title {
+                font-size: 20px;
+            }
+
+            .modal-content {
+                padding: 20px;
+            }
+
+            .favorite-item {
+                padding: 15px;
+            }
+
+            .favorite-item-text {
                 font-size: 14px;
             }
         }
@@ -269,11 +529,33 @@
         </div>
 
         <!-- 刷新按钮 -->
-        <button class="refresh-button" id="refresh-btn">🔄 换一句</button>
+        <div class="button-group">
+            <button class="refresh-button" id="refresh-btn">🔄 换一句</button>
+            <button class="favorite-button" id="favorite-btn">❤️ 收藏</button>
+            <button class="view-favorites-button" id="view-favorites-btn">📚 查看收藏</button>
+        </div>
 
         <!-- 页脚信息 -->
         <div class="footer">
             每天一句名言，启迪智慧人生
+        </div>
+    </div>
+
+    <!-- Toast 提示框 -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 收藏列表模态框 -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="favorites-modal">
+            <div class="modal-header">
+                <h2 class="modal-title">我的收藏</h2>
+                <button class="close-button" id="close-modal">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="favorites-list" id="favorites-list">
+                    <!-- 收藏列表将动态生成 -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -284,6 +566,15 @@
         const quoteText = document.getElementById('quote-text');
         const quoteAuthor = document.getElementById('quote-author');
         const refreshButton = document.getElementById('refresh-btn');
+        const favoriteButton = document.getElementById('favorite-btn');
+        const viewFavoritesButton = document.getElementById('view-favorites-btn');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const closeModal = document.getElementById('close-modal');
+        const favoritesList = document.getElementById('favorites-list');
+        const toast = document.getElementById('toast');
+
+        // 当前显示的名言
+        let currentQuote = null;
 
         // 100条名人名言数据库
         const quotes = [
@@ -422,6 +713,9 @@
             setTimeout(() => {
                 // 获取随机名言
                 const quote = getRandomQuote();
+                
+                // 保存当前名言
+                currentQuote = quote;
 
                 // 更新页面内容
                 quoteText.textContent = quote.text;
@@ -431,6 +725,108 @@
                 loadingElement.style.display = 'none';
                 quoteContent.style.display = 'block';
             }, 300);
+        }
+
+        // 显示 Toast 提示的函数
+        function showToast(message, type = 'success') {
+            toast.textContent = message;
+            toast.className = 'toast show ' + type;
+            
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // 从 localStorage 获取收藏列表
+        function getFavorites() {
+            const favorites = localStorage.getItem('favoriteQuotes');
+            return favorites ? JSON.parse(favorites) : [];
+        }
+
+        // 保存收藏列表到 localStorage
+        function saveFavorites(favorites) {
+            localStorage.setItem('favoriteQuotes', JSON.stringify(favorites));
+        }
+
+        // 检查名言是否已收藏
+        function isFavorite(quote) {
+            const favorites = getFavorites();
+            return favorites.some(fav => fav.text === quote.text && fav.author === quote.author);
+        }
+
+        // 收藏当前名言
+        function addToFavorites() {
+            if (!currentQuote) {
+                showToast('没有可收藏的名言', 'error');
+                return;
+            }
+
+            // 检查是否已经收藏
+            if (isFavorite(currentQuote)) {
+                showToast('该名言已经收藏过了', 'error');
+                return;
+            }
+
+            // 获取当前收藏列表
+            const favorites = getFavorites();
+            
+            // 添加当前名言
+            favorites.push({
+                text: currentQuote.text,
+                author: currentQuote.author,
+                timestamp: Date.now()
+            });
+
+            // 保存到 localStorage
+            saveFavorites(favorites);
+
+            // 显示成功提示
+            showToast('收藏成功！', 'success');
+        }
+
+        // 从收藏中删除
+        function removeFromFavorites(index) {
+            const favorites = getFavorites();
+            favorites.splice(index, 1);
+            saveFavorites(favorites);
+            
+            // 重新渲染收藏列表
+            renderFavorites();
+            
+            showToast('已取消收藏', 'success');
+        }
+
+        // 渲染收藏列表
+        function renderFavorites() {
+            const favorites = getFavorites();
+            
+            // 清空列表
+            favoritesList.innerHTML = '';
+
+            // 如果没有收藏
+            if (favorites.length === 0) {
+                favoritesList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <div class="empty-state-text">还没有收藏任何名言</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // 按时间倒序排列（最新的在前面）
+            favorites.reverse().forEach((quote, index) => {
+                const actualIndex = favorites.length - 1 - index;
+                const item = document.createElement('div');
+                item.className = 'favorite-item';
+                item.innerHTML = `
+                    <div class="favorite-item-text">${quote.text}</div>
+                    <div class="favorite-item-author">${quote.author}</div>
+                    <button class="delete-button" onclick="removeFromFavorites(${actualIndex})">×</button>
+                `;
+                favoritesList.appendChild(item);
+            });
         }
 
         // 页面加载时自动显示第一条名言
@@ -449,6 +845,32 @@
             // 显示新的名言
             displayQuote();
         });
+
+        // 点击收藏按钮
+        favoriteButton.addEventListener('click', function() {
+            addToFavorites();
+        });
+
+        // 点击查看收藏按钮
+        viewFavoritesButton.addEventListener('click', function() {
+            renderFavorites();
+            modalOverlay.classList.add('active');
+        });
+
+        // 点击关闭按钮
+        closeModal.addEventListener('click', function() {
+            modalOverlay.classList.remove('active');
+        });
+
+        // 点击遮罩层关闭模态框
+        modalOverlay.addEventListener('click', function(event) {
+            if (event.target === modalOverlay) {
+                modalOverlay.classList.remove('active');
+            }
+        });
+
+        // 将 removeFromFavorites 函数暴露到全局作用域，供 HTML 中的 onclick 调用
+        window.removeFromFavorites = removeFromFavorites;
     </script>
 </body>
 </html>
