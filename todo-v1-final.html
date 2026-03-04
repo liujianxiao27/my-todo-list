@@ -1374,11 +1374,11 @@
 
             // 重新排序所有任务（切换回自动排序时使用）
             function reorderAllTasks() {
-                const allTasks = Array.from(taskList.querySelectorAll('.task-item'));
+                const allTasks = getAllTasks();
                 
                 // 分离未完成和已完成的任务
-                const uncompletedTasks = allTasks.filter(task => task.dataset.completed === 'false');
-                const completedTasks = allTasks.filter(task => task.dataset.completed === 'true');
+                const uncompletedTasks = getUncompletedTasks();
+                const completedTasks = getCompletedTasks();
                 
                 // 对未完成的任务进行排序
                 uncompletedTasks.sort(function(a, b) {
@@ -1529,6 +1529,42 @@
                 dueDateTag.textContent = displayText;
                 dueDateTag.dataset.isOverdue = isOverdue;
                 return dueDateTag;
+            }
+
+            // 获取所有任务的通用函数
+            function getAllTasks() {
+                return Array.from(document.querySelectorAll('.task-item'));
+            }
+
+            // 获取未完成任务的通用函数
+            function getUncompletedTasks() {
+                return getAllTasks().filter(task => task.dataset.completed === 'false');
+            }
+
+            // 获取已完成任务的通用函数
+            function getCompletedTasks() {
+                return getAllTasks().filter(task => task.dataset.completed === 'true');
+            }
+
+            // 按分类筛选任务的通用函数
+            function getTasksByCategory(category) {
+                return getAllTasks().filter(task => task.dataset.category === category);
+            }
+
+            // 更新DOM元素文本内容的通用函数
+            function updateElementText(id, text) {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = text;
+                }
+            }
+
+            // 更新DOM元素样式的通用函数
+            function updateElementStyle(id, property, value) {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.style[property] = value;
+                }
             }
 
             // 检查并更新任务的逾期状态
@@ -1739,8 +1775,7 @@
                     insertTaskByPriority(taskItem);
                 } else {
                     // 手动模式：插入到未完成任务的最后
-                    const allTasks = Array.from(taskList.querySelectorAll('.task-item'));
-                    const firstCompletedTask = allTasks.find(task => task.dataset.completed === 'true');
+                    const firstCompletedTask = getCompletedTasks()[0];
                     if (firstCompletedTask) {
                         taskList.insertBefore(taskItem, firstCompletedTask);
                     } else {
@@ -1821,8 +1856,7 @@
                 const taskDueDate = taskItem.dataset.dueDate ? new Date(taskItem.dataset.dueDate).getTime() : null;
                 
                 // 获取所有未完成的任务
-                const allTasks = Array.from(taskList.querySelectorAll('.task-item'));
-                const uncompletedTasks = allTasks.filter(task => task.dataset.completed === 'false');
+                const uncompletedTasks = getUncompletedTasks();
                 
                 // 找到正确的插入位置
                 let insertBeforeTask = null;
@@ -1875,7 +1909,7 @@
                     taskList.insertBefore(taskItem, insertBeforeTask);
                 } else {
                     // 如果没有找到，插入到已完成任务之前
-                    const firstCompletedTask = allTasks.find(task => task.dataset.completed === 'true');
+                    const firstCompletedTask = getCompletedTasks()[0];
                     if (firstCompletedTask) {
                         taskList.insertBefore(taskItem, firstCompletedTask);
                     } else {
@@ -2175,7 +2209,7 @@
 
             // 检查并显示空列表提示的函数
             function checkEmptyState() {
-                const tasks = document.querySelectorAll('.task-item');
+                const tasks = getAllTasks();
                 const emptyState = document.querySelector('.empty-state');
                 
                 if (tasks.length === 0 && emptyState) {
@@ -2194,7 +2228,7 @@
                 );
                 
                 if (confirmed) {
-                    const allTasks = document.querySelectorAll('.task-item');
+                    const allTasks = getAllTasks();
                     allTasks.forEach(function(task) {
                         task.remove();
                     });
@@ -2210,8 +2244,7 @@
             // 清空已完成任务的函数
             async function clearCompletedTasks() {
                 // 获取所有已完成的任务
-                const completedTasks = Array.from(document.querySelectorAll('.task-item'))
-                    .filter(task => task.dataset.completed === 'true');
+                const completedTasks = getCompletedTasks();
                 
                 if (completedTasks.length === 0) {
                     await showConfirm(
@@ -2243,7 +2276,7 @@
             }
 
             // 为已存在的任务添加事件监听（页面初始的任务）
-            const existingTasks = document.querySelectorAll('.task-item');
+            const existingTasks = getAllTasks();
             existingTasks.forEach(function(taskItem) {
                 // 为完成按钮添加事件
                 const completeBtn = taskItem.querySelector('.complete-btn');
@@ -2266,7 +2299,7 @@
 
             // 定期更新所有任务的逾期状态（每分钟检查一次）
             setInterval(function() {
-                const allTasks = document.querySelectorAll('.task-item');
+                const allTasks = getAllTasks();
                 allTasks.forEach(function(taskItem) {
                     // 更新逾期状态
                     updateTaskOverdueStatus(taskItem);
@@ -2286,7 +2319,7 @@
             // 保存任务列表到 localStorage
             function saveTasksToStorage() {
                 // 获取所有任务项
-                const allTasks = document.querySelectorAll('.task-item');
+                const allTasks = getAllTasks();
                 const tasksData = [];
 
                 // 遍历所有任务，提取任务内容、完成状态、优先级、分类、时间戳、到期时间和完成时间
@@ -2644,7 +2677,7 @@
 
             // 搜索过滤任务的函数
             function filterTasks(searchText) {
-                const allTasks = document.querySelectorAll('.task-item');
+                const allTasks = getAllTasks();
                 const emptyState = document.querySelector('.empty-state');
                 let visibleCount = 0;
 
@@ -2750,21 +2783,10 @@
 
             // 更新统计数据
             function updateStatistics() {
-                const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const todayEnd = new Date(today);
-                todayEnd.setDate(today.getDate() + 1); // 今天结束时间
-                
-                const weekStart = new Date(today);
-                weekStart.setDate(today.getDate() - today.getDay()); // 本周开始（周日）
-                const weekEnd = new Date(weekStart);
-                weekEnd.setDate(weekStart.getDate() + 7); // 本周结束
-                
-                const monthStart = new Date(now.getFullYear(), now.getMonth(), 1); // 本月开始
-                const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1); // 下月1号（本月结束）
+                const timeRanges = getTimeRanges();
 
                 // 获取所有任务
-                const allTasks = Array.from(document.querySelectorAll('.task-item'));
+                const allTasks = getAllTasks();
 
                 // 按截止时间（到期时间）维度分类任务
                 // 今日：到期时间在今天的任务
@@ -2814,16 +2836,12 @@
                 calculateStats('day', dayTasks, dayCompletedTasks);
                 calculateStats('week', weekTasks, weekCompletedTasks);
                 calculateStats('month', monthTasks, monthCompletedTasks);
-                calculateStats('all', allTasks, allTasks.filter(task => task.dataset.completed === 'true'));
+                calculateStats('all', allTasks, getCompletedTasks());
 
                 // 计算分类统计（仅全部）
-                const workTasks = allTasks.filter(task => task.dataset.category === 'work');
-                const lifeTasks = allTasks.filter(task => task.dataset.category === 'life');
-                const studyTasks = allTasks.filter(task => task.dataset.category === 'study');
-
-                document.getElementById('all-work').textContent = workTasks.length;
-                document.getElementById('all-life').textContent = lifeTasks.length;
-                document.getElementById('all-study').textContent = studyTasks.length;
+                updateElementText('all-work', getTasksByCategory('work').length);
+                updateElementText('all-life', getTasksByCategory('life').length);
+                updateElementText('all-study', getTasksByCategory('study').length);
             }
 
             // 计算统计数据
@@ -2844,13 +2862,13 @@
                 const overdueRate = total > 0 ? Math.round((overdue / total) * 100) : 0;
 
                 // 更新DOM
-                document.getElementById(period + '-total').textContent = total;
-                document.getElementById(period + '-completed').textContent = completed;
-                document.getElementById(period + '-overdue').textContent = overdue;
-                document.getElementById(period + '-completion-rate').textContent = completionRate + '%';
-                document.getElementById(period + '-overdue-rate').textContent = overdueRate + '%';
-                document.getElementById(period + '-completion-bar').style.width = completionRate + '%';
-                document.getElementById(period + '-overdue-bar').style.width = overdueRate + '%';
+                updateElementText(period + '-total', total);
+                updateElementText(period + '-completed', completed);
+                updateElementText(period + '-overdue', overdue);
+                updateElementText(period + '-completion-rate', completionRate + '%');
+                updateElementText(period + '-overdue-rate', overdueRate + '%');
+                updateElementStyle(period + '-completion-bar', 'width', completionRate + '%');
+                updateElementStyle(period + '-overdue-bar', 'width', overdueRate + '%');
             }
 
             // 拖拽功能实现
@@ -2874,7 +2892,7 @@
                 this.style.opacity = '1';
                 
                 // 移除所有拖拽样式
-                const allItems = document.querySelectorAll('.task-item');
+                const allItems = getAllTasks();
                 allItems.forEach(function(item) {
                     item.classList.remove('drag-over');
                 });
@@ -2921,7 +2939,7 @@
                     // 只允许在相同完成状态的任务之间拖拽
                     if (draggedCompleted === targetCompleted) {
                         // 获取所有任务项
-                        const allItems = Array.from(taskList.querySelectorAll('.task-item'));
+                        const allItems = getAllTasks();
                         const draggedIndex = allItems.indexOf(draggedItem);
                         const targetIndex = allItems.indexOf(this);
                         
