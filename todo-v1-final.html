@@ -1380,30 +1380,8 @@
                 const uncompletedTasks = getUncompletedTasks();
                 const completedTasks = getCompletedTasks();
                 
-                // 对未完成的任务进行排序
-                uncompletedTasks.sort(function(a, b) {
-                    const priorityA = getPriorityValue(a.dataset.priority);
-                    const priorityB = getPriorityValue(b.dataset.priority);
-                    
-                    if (priorityA !== priorityB) {
-                        return priorityA - priorityB;
-                    }
-                    
-                    const dueDateA = a.dataset.dueDate ? new Date(a.dataset.dueDate).getTime() : null;
-                    const dueDateB = b.dataset.dueDate ? new Date(b.dataset.dueDate).getTime() : null;
-                    
-                    if (dueDateA !== null && dueDateB === null) return -1;
-                    if (dueDateA === null && dueDateB !== null) return 1;
-                    
-                    if (dueDateA !== null && dueDateB !== null) {
-                        if (dueDateA !== dueDateB) {
-                            return dueDateA - dueDateB;
-                        }
-                        return (parseInt(b.dataset.timestamp) || 0) - (parseInt(a.dataset.timestamp) || 0);
-                    }
-                    
-                    return (parseInt(b.dataset.timestamp) || 0) - (parseInt(a.dataset.timestamp) || 0);
-                });
+                // 对未完成的任务进行排序 - 使用统一的排序比较函数
+                uncompletedTasks.sort(compareTasksForSorting);
                 
                 // 清空列表
                 allTasks.forEach(task => task.remove());
@@ -1551,6 +1529,48 @@
                 return getAllTasks().filter(task => task.dataset.category === category);
             }
 
+            // 统一的任务排序比较函数
+            function compareTasksForSorting(taskA, taskB) {
+                const priorityMap = { 'P0': 0, 'P1': 1, 'P2': 2 };
+                
+                // 已完成的任务排在最后
+                const completedA = taskA.completed !== undefined ? taskA.completed : (taskA.dataset?.completed === 'true');
+                const completedB = taskB.completed !== undefined ? taskB.completed : (taskB.dataset?.completed === 'true');
+                
+                if (completedA && !completedB) return 1;
+                if (!completedA && completedB) return -1;
+                
+                // 未完成的任务按优先级排序（P0最高，P2最低）
+                if (!completedA && !completedB) {
+                    const priorityA = priorityMap[taskA.priority || taskA.dataset?.priority || 'P0'];
+                    const priorityB = priorityMap[taskB.priority || taskB.dataset?.priority || 'P0'];
+                    
+                    // 如果优先级不同，按优先级排序
+                    if (priorityA !== priorityB) {
+                        return priorityA - priorityB;
+                    }
+                    
+                    // 如果优先级相同，按截止时间排序
+                    const dueDateA = (taskA.dueDate || taskA.dataset?.dueDate) ? new Date(taskA.dueDate || taskA.dataset.dueDate).getTime() : null;
+                    const dueDateB = (taskB.dueDate || taskB.dataset?.dueDate) ? new Date(taskB.dueDate || taskB.dataset.dueDate).getTime() : null;
+                    
+                    // 有截止时间的排在前面
+                    if (dueDateA !== null && dueDateB === null) return -1;
+                    if (dueDateA === null && dueDateB !== null) return 1;
+                    
+                    // 如果都有截止时间，早的排在前面
+                    if (dueDateA !== null && dueDateB !== null) {
+                        return dueDateA - dueDateB;
+                    }
+                    
+                    // 如果都没有截止时间，保持原顺序
+                    return 0;
+                }
+                
+                // 已完成的任务保持原顺序
+                return 0;
+            }
+
             // 更新DOM元素文本内容的通用函数
             function updateElementText(id, text) {
                 const element = document.getElementById(id);
@@ -1668,21 +1688,11 @@
                 return false; // 没有重复，返回 false
             }
 
-            // 创建任务项的函数
-            function createTaskItem(taskText) {
-                // 获取到期时间
-                const dueDate = dueDateInput.value || null;
-                
+            // 创建任务DOM元素的通用函数
+            function buildTaskElement(taskText, priority, category, dueDate, isCompleted) {
                 // 创建任务项容器
                 const taskItem = document.createElement('div');
                 taskItem.className = 'task-item';
-                taskItem.dataset.completed = 'false'; // 标记任务为未完成
-                taskItem.dataset.priority = selectedPriority; // 保存优先级
-                taskItem.dataset.category = selectedCategory; // 保存分类
-                taskItem.dataset.timestamp = Date.now(); // 添加时间戳
-                if (dueDate) {
-                    taskItem.dataset.dueDate = dueDate; // 保存到期时间
-                }
                 
                 // 设置拖拽属性
                 taskItem.draggable = true;
@@ -1696,19 +1706,25 @@
                 
                 // 创建优先级标签
                 const priorityTag = document.createElement('span');
-                priorityTag.className = 'priority-tag ' + selectedPriority.toLowerCase();
-                priorityTag.textContent = selectedPriority;
+                priorityTag.className = 'priority-tag ' + priority.toLowerCase();
+                priorityTag.textContent = priority;
                 
                 // 创建分类标签
                 const categoryTag = document.createElement('span');
-                categoryTag.className = 'category-tag ' + selectedCategory;
+                categoryTag.className = 'category-tag ' + category;
                 const categoryNames = { work: '工作', life: '生活', study: '学习' };
-                categoryTag.textContent = categoryNames[selectedCategory];
+                categoryTag.textContent = categoryNames[category];
                 
                 // 创建任务文本内容
                 const taskTextContent = document.createElement('span');
                 taskTextContent.className = 'task-text-content';
                 taskTextContent.textContent = taskText;
+                
+                // 如果任务已完成，应用完成样式
+                if (isCompleted) {
+                    taskTextContent.style.textDecoration = 'line-through';
+                    taskTextContent.style.color = '#a0aec0';
+                }
                 
                 // 组装任务文本：优先级标签 + 分类标签 + 文本内容
                 taskTextSpan.appendChild(priorityTag);
@@ -1716,8 +1732,8 @@
                 taskTextSpan.appendChild(taskTextContent);
                 
                 // 如果有到期时间，添加到期时间标签
-                if (taskItem.dataset.dueDate) {
-                    const dueDateTag = createDueDateTag(taskItem.dataset.dueDate);
+                if (dueDate) {
+                    const dueDateTag = createDueDateTag(dueDate);
                     taskTextSpan.appendChild(dueDateTag);
                 }
                 
@@ -1729,7 +1745,18 @@
                     hideTooltip();
                 });
 
-                // 创建按钮组容器
+                // 创建按钮组
+                const taskActions = createTaskActions(taskItem);
+
+                // 组装任务项：文本和按钮组添加到任务项
+                taskItem.appendChild(taskTextSpan);
+                taskItem.appendChild(taskActions);
+
+                return taskItem;
+            }
+
+            // 创建任务按钮组的通用函数
+            function createTaskActions(taskItem) {
                 const taskActions = document.createElement('div');
                 taskActions.className = 'task-actions';
 
@@ -1737,7 +1764,6 @@
                 const completeBtn = document.createElement('button');
                 completeBtn.className = 'complete-btn';
                 completeBtn.textContent = '完成';
-                // 点击完成按钮时的处理
                 completeBtn.addEventListener('click', function() {
                     completeTask(taskItem);
                 });
@@ -1746,7 +1772,6 @@
                 const editBtn = document.createElement('button');
                 editBtn.className = 'edit-btn';
                 editBtn.textContent = '编辑';
-                // 点击编辑按钮时的处理
                 editBtn.addEventListener('click', function() {
                     editTask(taskItem);
                 });
@@ -1755,23 +1780,37 @@
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'delete-btn';
                 deleteBtn.textContent = '删除';
-                // 点击删除按钮时的处理
                 deleteBtn.addEventListener('click', function() {
                     deleteTask(taskItem);
                 });
 
-                // 组装任务项：按钮添加到按钮组
                 taskActions.appendChild(completeBtn);
                 taskActions.appendChild(editBtn);
                 taskActions.appendChild(deleteBtn);
 
-                // 组装任务项：文本和按钮组添加到任务项
-                taskItem.appendChild(taskTextSpan);
-                taskItem.appendChild(taskActions);
+                return taskActions;
+            }
+
+            // 创建任务项的函数
+            function createTaskItem(taskText) {
+                // 获取到期时间
+                const dueDate = dueDateInput.value || null;
+                
+                // 使用通用函数创建任务元素
+                const taskItem = buildTaskElement(taskText, selectedPriority, selectedCategory, dueDate, false);
+                
+                // 设置数据属性
+                taskItem.dataset.completed = 'false';
+                taskItem.dataset.priority = selectedPriority;
+                taskItem.dataset.category = selectedCategory;
+                taskItem.dataset.timestamp = Date.now();
+                if (dueDate) {
+                    taskItem.dataset.dueDate = dueDate;
+                }
 
                 // 根据排序模式插入任务
                 if (sortMode === 'auto') {
-                    // 按优先级和时间戳插入任务
+                    // 按优先级和截止时间插入任务
                     insertTaskByPriority(taskItem);
                 } else {
                     // 手动模式：插入到未完成任务的最后
@@ -1842,65 +1881,18 @@
                 taskList.appendChild(taskItem);
             }
 
-            // 获取优先级的数值（用于排序）
-            function getPriorityValue(priority) {
-                const priorityMap = { 'P0': 0, 'P1': 1, 'P2': 2 };
-                return priorityMap[priority] || 999;
-            }
-
-            // 按优先级和时间戳插入任务的函数
+            // 按优先级和截止时间插入任务的函数
             function insertTaskByPriority(taskItem) {
-                const taskPriority = taskItem.dataset.priority;
-                const taskPriorityValue = getPriorityValue(taskPriority);
-                const taskTimestamp = parseInt(taskItem.dataset.timestamp) || Date.now();
-                const taskDueDate = taskItem.dataset.dueDate ? new Date(taskItem.dataset.dueDate).getTime() : null;
+                // 获取所有未完成的任务（不包括当前要插入的任务）
+                const uncompletedTasks = getUncompletedTasks().filter(task => task !== taskItem);
                 
-                // 获取所有未完成的任务
-                const uncompletedTasks = getUncompletedTasks();
-                
-                // 找到正确的插入位置
+                // 找到正确的插入位置 - 使用统一的排序比较函数
                 let insertBeforeTask = null;
                 for (let i = 0; i < uncompletedTasks.length; i++) {
-                    const otherPriorityValue = getPriorityValue(uncompletedTasks[i].dataset.priority);
-                    const otherDueDate = uncompletedTasks[i].dataset.dueDate ? new Date(uncompletedTasks[i].dataset.dueDate).getTime() : null;
-                    const otherTimestamp = parseInt(uncompletedTasks[i].dataset.timestamp) || 0;
-                    
-                    // 如果优先级更低，插入到这个任务之前
-                    if (otherPriorityValue > taskPriorityValue) {
+                    // 使用统一的比较函数，如果当前任务应该排在前面（返回负数），则插入到这个位置
+                    if (compareTasksForSorting(taskItem, uncompletedTasks[i]) < 0) {
                         insertBeforeTask = uncompletedTasks[i];
                         break;
-                    }
-                    
-                    // 如果优先级相同
-                    if (otherPriorityValue === taskPriorityValue) {
-                        // 如果当前任务有到期时间
-                        if (taskDueDate !== null) {
-                            // 如果对方没有到期时间，当前任务排在前面
-                            if (otherDueDate === null) {
-                                insertBeforeTask = uncompletedTasks[i];
-                                break;
-                            }
-                            // 如果对方也有到期时间，比较到期时间（早的排前面）
-                            if (taskDueDate < otherDueDate) {
-                                insertBeforeTask = uncompletedTasks[i];
-                                break;
-                            }
-                            // 如果到期时间相同，按时间戳倒序（后加入的排前面）
-                            if (taskDueDate === otherDueDate && otherTimestamp < taskTimestamp) {
-                                insertBeforeTask = uncompletedTasks[i];
-                                break;
-                            }
-                        } else {
-                            // 如果当前任务没有到期时间，对方有到期时间，当前任务排在后面
-                            if (otherDueDate !== null) {
-                                continue;
-                            }
-                            // 如果双方都没有到期时间，按时间戳倒序（后加入的排前面）
-                            if (otherTimestamp < taskTimestamp) {
-                                insertBeforeTask = uncompletedTasks[i];
-                                break;
-                            }
-                        }
                     }
                 }
                 
@@ -1908,7 +1900,7 @@
                     // 插入到找到的位置之前
                     taskList.insertBefore(taskItem, insertBeforeTask);
                 } else {
-                    // 如果没有找到，插入到已完成任务之前
+                    // 如果没有找到合适的位置，插入到已完成任务之前
                     const firstCompletedTask = getCompletedTasks()[0];
                     if (firstCompletedTask) {
                         taskList.insertBefore(taskItem, firstCompletedTask);
@@ -1924,11 +1916,8 @@
                 }
             }
 
-            // 将恢复的任务移到未完成任务的正确位置（按优先级和时间戳排序）
+            // 将恢复的任务移到未完成任务的正确位置（按优先级和截止时间排序）
             function moveToUncompleted(taskItem) {
-                // 更新时间戳为当前时间（恢复时视为重新加入）
-                taskItem.dataset.timestamp = Date.now();
-                
                 // 使用统一的插入函数
                 taskItem.remove();
                 insertTaskByPriority(taskItem);
@@ -2367,51 +2356,10 @@
                         hideEmptyState();
                     }
 
-                    // 定义优先级映射（确保在排序时可用）
-                    const priorityMap = { 'P0': 0, 'P1': 1, 'P2': 2 };
-
                     // 仅在自动排序模式下进行排序
                     if (sortMode === 'auto') {
-                        // 按优先级、到期时间和时间戳排序任务数据
-                        tasksData.sort(function(a, b) {
-                            // 已完成的任务排在最后
-                            if (a.completed && !b.completed) return 1;
-                            if (!a.completed && b.completed) return -1;
-                            
-                            // 未完成的任务按优先级排序（P0最高，P2最低）
-                            if (!a.completed && !b.completed) {
-                                const priorityA = priorityMap[a.priority || 'P0'];
-                                const priorityB = priorityMap[b.priority || 'P0'];
-                                
-                                // 如果优先级不同，按优先级排序
-                                if (priorityA !== priorityB) {
-                                    return priorityA - priorityB;
-                                }
-                                
-                                // 如果优先级相同，按到期时间排序
-                                const dueDateA = a.dueDate ? new Date(a.dueDate).getTime() : null;
-                                const dueDateB = b.dueDate ? new Date(b.dueDate).getTime() : null;
-                                
-                                // 有到期时间的排在前面
-                                if (dueDateA !== null && dueDateB === null) return -1;
-                                if (dueDateA === null && dueDateB !== null) return 1;
-                                
-                                // 如果都有到期时间，早的排在前面
-                                if (dueDateA !== null && dueDateB !== null) {
-                                    if (dueDateA !== dueDateB) {
-                                        return dueDateA - dueDateB;
-                                    }
-                                    // 到期时间相同，按时间戳倒序（后加入的排前面）
-                                    return (b.timestamp || 0) - (a.timestamp || 0);
-                                }
-                                
-                                // 如果都没有到期时间，按时间戳倒序排序（后加入的排在前面）
-                                return (b.timestamp || 0) - (a.timestamp || 0);
-                            }
-                            
-                            // 已完成的任务保持原顺序
-                            return 0;
-                        });
+                        // 使用统一的排序比较函数
+                        tasksData.sort(compareTasksForSorting);
                     }
                     // 手动排序模式下，保持存储的顺序
 
