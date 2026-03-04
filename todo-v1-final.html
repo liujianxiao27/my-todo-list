@@ -1292,17 +1292,23 @@
     </style>
 
     <script>
+        // 常量定义
+        const PRIORITY_VALUES = { 'P0': 0, 'P1': 1, 'P2': 2 };
+        const CATEGORY_LABELS = { work: '工作', life: '生活', study: '学习' };
+        const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
+        const UPCOMING_DAYS_THRESHOLD = 3;
+        
         // 等待页面加载完成后再执行代码
         document.addEventListener('DOMContentLoaded', function() {
             // 获取页面元素
             const taskInput = document.querySelector('.task-input'); // 输入框
-            const addBtn = document.querySelector('.add-btn'); // 添加按钮
+            const addButton = document.querySelector('.add-btn'); // 添加按钮
             const taskList = document.querySelector('.task-list'); // 任务列表容器
-            const clearAllBtn = document.getElementById('clear-all-btn'); // 清空按钮
-            const clearCompletedBtn = document.getElementById('clear-completed-btn'); // 清空完成按钮
-            const priorityBtns = document.querySelectorAll('.priority-btn'); // 优先级按钮
-            const categoryBtns = document.querySelectorAll('.category-btn'); // 分类按钮
-            const filterBtns = document.querySelectorAll('.filter-btn'); // 筛选按钮
+            const clearAllButton = document.getElementById('clear-all-btn'); // 清空按钮
+            const clearCompletedButton = document.getElementById('clear-completed-btn'); // 清空完成按钮
+            const priorityButtons = document.querySelectorAll('.priority-btn'); // 优先级按钮
+            const categoryButtons = document.querySelectorAll('.category-btn'); // 分类按钮
+            const filterButtons = document.querySelectorAll('.filter-btn'); // 筛选按钮
             const searchInput = document.getElementById('search-input'); // 搜索输入框
             const themeToggle = document.getElementById('theme-toggle'); // 深色模式切换按钮
             const dueDateInput = document.getElementById('due-date-input'); // 到期时间输入框
@@ -1374,11 +1380,11 @@
 
             // 重新排序所有任务（切换回自动排序时使用）
             function reorderAllTasks() {
-                const allTasks = getAllTasks();
+                const allTasks = getAllTaskElements();
                 
                 // 分离未完成和已完成的任务
-                const uncompletedTasks = getUncompletedTasks();
-                const completedTasks = getCompletedTasks();
+                const uncompletedTasks = getUncompletedTaskElements();
+                const completedTasks = getCompletedTaskElements();
                 
                 // 对未完成的任务进行排序 - 使用统一的排序比较函数
                 uncompletedTasks.sort(compareTasksForSorting);
@@ -1395,50 +1401,50 @@
             }
 
             // 优先级按钮点击事件
-            priorityBtns.forEach(function(btn) {
-                btn.addEventListener('click', function() {
+            priorityButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
                     // 移除所有按钮的 active 类
-                    priorityBtns.forEach(function(b) {
+                    priorityButtons.forEach(function(b) {
                         b.classList.remove('active');
                     });
                     
                     // 给当前按钮添加 active 类
-                    btn.classList.add('active');
+                    button.classList.add('active');
                     
                     // 更新选中的优先级
-                    selectedPriority = btn.dataset.priority;
+                    selectedPriority = button.dataset.priority;
                 });
             });
 
             // 分类按钮点击事件
-            categoryBtns.forEach(function(btn) {
-                btn.addEventListener('click', function() {
+            categoryButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
                     // 移除所有按钮的 active 类
-                    categoryBtns.forEach(function(b) {
+                    categoryButtons.forEach(function(b) {
                         b.classList.remove('active');
                     });
                     
                     // 给当前按钮添加 active 类
-                    btn.classList.add('active');
+                    button.classList.add('active');
                     
                     // 更新选中的分类
-                    selectedCategory = btn.dataset.category;
+                    selectedCategory = button.dataset.category;
                 });
             });
 
             // 筛选按钮点击事件
-            filterBtns.forEach(function(btn) {
-                btn.addEventListener('click', function() {
+            filterButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
                     // 移除所有按钮的 active 类
-                    filterBtns.forEach(function(b) {
+                    filterButtons.forEach(function(b) {
                         b.classList.remove('active');
                     });
                     
                     // 给当前按钮添加 active 类
-                    btn.classList.add('active');
+                    button.classList.add('active');
                     
                     // 更新当前筛选
-                    currentFilter = btn.dataset.filter;
+                    currentFilter = button.dataset.filter;
                     
                     // 应用筛选
                     applyFilter();
@@ -1451,20 +1457,20 @@
             });
 
             // 点击添加按钮时执行添加任务功能
-            addBtn.addEventListener('click', addTask);
+            addButton.addEventListener('click', handleAddTask);
 
             // 按下回车键时也能添加任务
             taskInput.addEventListener('keypress', function(event) {
                 if (event.key === 'Enter') {
-                    addTask();
+                    handleAddTask();
                 }
             });
 
             // 点击清空按钮时清空所有任务
-            clearAllBtn.addEventListener('click', clearAllTasks);
+            clearAllButton.addEventListener('click', clearAllTasks);
 
             // 点击清空完成按钮时清空已完成的任务
-            clearCompletedBtn.addEventListener('click', clearCompletedTasks);
+            clearCompletedButton.addEventListener('click', clearCompletedTasks);
 
             // 创建到期时间标签
             function createDueDateTag(dueDate) {
@@ -1477,8 +1483,8 @@
                 const dueDay = new Date(dueDateTime.getFullYear(), dueDateTime.getMonth(), dueDateTime.getDate());
                 
                 // 计算天数差
-                const diffTime = dueDay - today;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const timeDifference = dueDay - today;
+                const daysDifference = Math.ceil(timeDifference / MILLISECONDS_PER_DAY);
                 
                 // 格式化显示
                 const month = (dueDateTime.getMonth() + 1).toString().padStart(2, '0');
@@ -1490,16 +1496,16 @@
                 let isOverdue = false;
                 
                 // 根据时间差设置样式
-                if (diffDays < 0 || (diffDays === 0 && dueDateTime < now)) {
+                if (daysDifference < 0 || (daysDifference === 0 && dueDateTime < now)) {
                     dueDateTag.classList.add('overdue');
                     displayText = '已逾期 ' + displayText;
                     isOverdue = true;
-                } else if (diffDays === 0) {
+                } else if (daysDifference === 0) {
                     dueDateTag.classList.add('today');
                     displayText = '今天 ' + displayText;
-                } else if (diffDays <= 3) {
+                } else if (daysDifference <= UPCOMING_DAYS_THRESHOLD) {
                     dueDateTag.classList.add('upcoming');
-                    displayText = `${diffDays}天后 ` + displayText;
+                    displayText = `${daysDifference}天后 ` + displayText;
                 } else {
                     dueDateTag.classList.add('future');
                 }
@@ -1509,30 +1515,28 @@
                 return dueDateTag;
             }
 
-            // 获取所有任务的通用函数
-            function getAllTasks() {
+            // 获取所有任务元素的通用函数
+            function getAllTaskElements() {
                 return Array.from(document.querySelectorAll('.task-item'));
             }
 
-            // 获取未完成任务的通用函数
-            function getUncompletedTasks() {
-                return getAllTasks().filter(task => task.dataset.completed === 'false');
+            // 获取未完成任务元素的通用函数
+            function getUncompletedTaskElements() {
+                return getAllTaskElements().filter(task => task.dataset.completed === 'false');
             }
 
-            // 获取已完成任务的通用函数
-            function getCompletedTasks() {
-                return getAllTasks().filter(task => task.dataset.completed === 'true');
+            // 获取已完成任务元素的通用函数
+            function getCompletedTaskElements() {
+                return getAllTaskElements().filter(task => task.dataset.completed === 'true');
             }
 
-            // 按分类筛选任务的通用函数
-            function getTasksByCategory(category) {
-                return getAllTasks().filter(task => task.dataset.category === category);
+            // 按分类筛选任务元素的通用函数
+            function getTaskElementsByCategory(category) {
+                return getAllTaskElements().filter(task => task.dataset.category === category);
             }
 
             // 统一的任务排序比较函数
             function compareTasksForSorting(taskA, taskB) {
-                const priorityMap = { 'P0': 0, 'P1': 1, 'P2': 2 };
-                
                 // 已完成的任务排在最后
                 const completedA = taskA.completed !== undefined ? taskA.completed : (taskA.dataset?.completed === 'true');
                 const completedB = taskB.completed !== undefined ? taskB.completed : (taskB.dataset?.completed === 'true');
@@ -1542,8 +1546,8 @@
                 
                 // 未完成的任务按优先级排序（P0最高，P2最低）
                 if (!completedA && !completedB) {
-                    const priorityA = priorityMap[taskA.priority || taskA.dataset?.priority || 'P0'];
-                    const priorityB = priorityMap[taskB.priority || taskB.dataset?.priority || 'P0'];
+                    const priorityA = PRIORITY_VALUES[taskA.priority || taskA.dataset?.priority || 'P0'];
+                    const priorityB = PRIORITY_VALUES[taskB.priority || taskB.dataset?.priority || 'P0'];
                     
                     // 如果优先级不同，按优先级排序
                     if (priorityA !== priorityB) {
@@ -1607,19 +1611,19 @@
             }
 
             // 添加任务的函数
-            async function addTask() {
+            async function handleAddTask() {
                 // 获取输入框的内容并去除首尾空格
                 const taskText = taskInput.value.trim();
 
                 // 检查输入是否为空
                 if (taskText === '') {
-                    await showConfirm('提示', '请输入任务内容！', false);
+                    await showConfirmDialog('提示', '请输入任务内容！', false);
                     return; // 结束函数，不继续执行
                 }
 
                 // 检查任务是否重复
-                if (isTaskDuplicate(taskText)) {
-                    await showConfirm('提示', '该任务已存在，请勿重复添加！', false);
+                if (hasTaskWithSameText(taskText)) {
+                    await showConfirmDialog('提示', '该任务已存在，请勿重复添加！', false);
                     return; // 结束函数，不继续执行
                 }
 
@@ -1627,54 +1631,14 @@
                 hideEmptyState();
 
                 // 创建新的任务项
-                createTaskItem(taskText);
+                addNewTask(taskText);
 
                 // 清空输入框
                 taskInput.value = '';
             }
 
-            // 创建到期时间标签
-            function createDueDateTag(dueDate) {
-                const dueDateTag = document.createElement('span');
-                dueDateTag.className = 'due-date-tag';
-                
-                const dueDateTime = new Date(dueDate);
-                const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const dueDay = new Date(dueDateTime.getFullYear(), dueDateTime.getMonth(), dueDateTime.getDate());
-                
-                // 计算天数差
-                const diffTime = dueDay - today;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
-                // 格式化显示
-                const month = (dueDateTime.getMonth() + 1).toString().padStart(2, '0');
-                const day = dueDateTime.getDate().toString().padStart(2, '0');
-                const hours = dueDateTime.getHours().toString().padStart(2, '0');
-                const minutes = dueDateTime.getMinutes().toString().padStart(2, '0');
-                
-                let displayText = `${month}-${day} ${hours}:${minutes}`;
-                
-                // 根据时间差设置样式
-                if (diffDays < 0 || (diffDays === 0 && dueDateTime < now)) {
-                    dueDateTag.classList.add('overdue');
-                    displayText = '已逾期 ' + displayText;
-                } else if (diffDays === 0) {
-                    dueDateTag.classList.add('today');
-                    displayText = '今天 ' + displayText;
-                } else if (diffDays <= 3) {
-                    dueDateTag.classList.add('upcoming');
-                    displayText = `${diffDays}天后 ` + displayText;
-                } else {
-                    dueDateTag.classList.add('future');
-                }
-                
-                dueDateTag.textContent = displayText;
-                return dueDateTag;
-            }
-
             // 检查任务是否重复的函数
-            function isTaskDuplicate(newTaskText) {
+            function hasTaskWithSameText(newTaskText) {
                 // 获取所有已存在的任务文本
                 const existingTasks = document.querySelectorAll('.task-text-content');
                 
@@ -1689,7 +1653,7 @@
             }
 
             // 创建任务DOM元素的通用函数
-            function buildTaskElement(taskText, priority, category, dueDate, isCompleted) {
+            function createTaskElement(taskText, priority, category, dueDate, isCompleted) {
                 // 创建任务项容器
                 const taskItem = document.createElement('div');
                 taskItem.className = 'task-item';
@@ -1701,8 +1665,8 @@
                 addDragListeners(taskItem);
 
                 // 创建任务文本元素
-                const taskTextSpan = document.createElement('span');
-                taskTextSpan.className = 'task-text';
+                const taskTextElement = document.createElement('span');
+                taskTextElement.className = 'task-text';
                 
                 // 创建优先级标签
                 const priorityTag = document.createElement('span');
@@ -1712,8 +1676,7 @@
                 // 创建分类标签
                 const categoryTag = document.createElement('span');
                 categoryTag.className = 'category-tag ' + category;
-                const categoryNames = { work: '工作', life: '生活', study: '学习' };
-                categoryTag.textContent = categoryNames[category];
+                categoryTag.textContent = CATEGORY_LABELS[category];
                 
                 // 创建任务文本内容
                 const taskTextContent = document.createElement('span');
@@ -1727,21 +1690,21 @@
                 }
                 
                 // 组装任务文本：优先级标签 + 分类标签 + 文本内容
-                taskTextSpan.appendChild(priorityTag);
-                taskTextSpan.appendChild(categoryTag);
-                taskTextSpan.appendChild(taskTextContent);
+                taskTextElement.appendChild(priorityTag);
+                taskTextElement.appendChild(categoryTag);
+                taskTextElement.appendChild(taskTextContent);
                 
                 // 如果有到期时间，添加到期时间标签
                 if (dueDate) {
                     const dueDateTag = createDueDateTag(dueDate);
-                    taskTextSpan.appendChild(dueDateTag);
+                    taskTextElement.appendChild(dueDateTag);
                 }
                 
                 // 添加鼠标悬停事件显示自定义提示框
-                taskTextSpan.addEventListener('mouseenter', function(event) {
+                taskTextElement.addEventListener('mouseenter', function(event) {
                     showTooltip(event, taskText);
                 });
-                taskTextSpan.addEventListener('mouseleave', function() {
+                taskTextElement.addEventListener('mouseleave', function() {
                     hideTooltip();
                 });
 
@@ -1749,7 +1712,7 @@
                 const taskActions = createTaskActions(taskItem);
 
                 // 组装任务项：文本和按钮组添加到任务项
-                taskItem.appendChild(taskTextSpan);
+                taskItem.appendChild(taskTextElement);
                 taskItem.appendChild(taskActions);
 
                 return taskItem;
@@ -1761,43 +1724,43 @@
                 taskActions.className = 'task-actions';
 
                 // 创建完成按钮
-                const completeBtn = document.createElement('button');
-                completeBtn.className = 'complete-btn';
-                completeBtn.textContent = '完成';
-                completeBtn.addEventListener('click', function() {
+                const completeButton = document.createElement('button');
+                completeButton.className = 'complete-btn';
+                completeButton.textContent = '完成';
+                completeButton.addEventListener('click', function() {
                     completeTask(taskItem);
                 });
 
                 // 创建编辑按钮
-                const editBtn = document.createElement('button');
-                editBtn.className = 'edit-btn';
-                editBtn.textContent = '编辑';
-                editBtn.addEventListener('click', function() {
+                const editButton = document.createElement('button');
+                editButton.className = 'edit-btn';
+                editButton.textContent = '编辑';
+                editButton.addEventListener('click', function() {
                     editTask(taskItem);
                 });
 
                 // 创建删除按钮
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'delete-btn';
-                deleteBtn.textContent = '删除';
-                deleteBtn.addEventListener('click', function() {
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'delete-btn';
+                deleteButton.textContent = '删除';
+                deleteButton.addEventListener('click', function() {
                     deleteTask(taskItem);
                 });
 
-                taskActions.appendChild(completeBtn);
-                taskActions.appendChild(editBtn);
-                taskActions.appendChild(deleteBtn);
+                taskActions.appendChild(completeButton);
+                taskActions.appendChild(editButton);
+                taskActions.appendChild(deleteButton);
 
                 return taskActions;
             }
 
             // 创建任务项的函数
-            function createTaskItem(taskText) {
+            function addNewTask(taskText) {
                 // 获取到期时间
                 const dueDate = dueDateInput.value || null;
                 
                 // 使用通用函数创建任务元素
-                const taskItem = buildTaskElement(taskText, selectedPriority, selectedCategory, dueDate, false);
+                const taskItem = createTaskElement(taskText, selectedPriority, selectedCategory, dueDate, false);
                 
                 // 设置数据属性
                 taskItem.dataset.completed = 'false';
@@ -1814,7 +1777,7 @@
                     insertTaskByPriority(taskItem);
                 } else {
                     // 手动模式：插入到未完成任务的最后
-                    const firstCompletedTask = getCompletedTasks()[0];
+                    const firstCompletedTask = getCompletedTaskElements()[0];
                     if (firstCompletedTask) {
                         taskList.insertBefore(taskItem, firstCompletedTask);
                     } else {
@@ -1884,7 +1847,7 @@
             // 按优先级和截止时间插入任务的函数
             function insertTaskByPriority(taskItem) {
                 // 获取所有未完成的任务（不包括当前要插入的任务）
-                const uncompletedTasks = getUncompletedTasks().filter(task => task !== taskItem);
+                const uncompletedTasks = getUncompletedTaskElements().filter(task => task !== taskItem);
                 
                 // 找到正确的插入位置 - 使用统一的排序比较函数
                 let insertBeforeTask = null;
@@ -1901,7 +1864,7 @@
                     taskList.insertBefore(taskItem, insertBeforeTask);
                 } else {
                     // 如果没有找到合适的位置，插入到已完成任务之前
-                    const firstCompletedTask = getCompletedTasks()[0];
+                    const firstCompletedTask = getCompletedTaskElements()[0];
                     if (firstCompletedTask) {
                         taskList.insertBefore(taskItem, firstCompletedTask);
                     } else {
@@ -1927,7 +1890,7 @@
             async function deleteTask(taskItem) {
                 // 使用自定义弹窗进行二次确认
                 const taskText = taskItem.querySelector('.task-text-content').textContent;
-                const confirmed = await showConfirm(
+                const confirmed = await showConfirmDialog(
                     '删除任务',
                     `确定要删除任务"${taskText}"吗？`,
                     true
@@ -2089,7 +2052,7 @@
 
                     // 检查输入是否为空
                     if (newText === '') {
-                        await showConfirm('提示', '任务内容不能为空！', false);
+                        await showConfirmDialog('提示', '任务内容不能为空！', false);
                         textInput.focus();
                         return;
                     }
@@ -2105,7 +2068,7 @@
                     });
 
                     if (isDuplicate) {
-                        await showConfirm('提示', '该任务已存在，请勿重复添加！', false);
+                        await showConfirmDialog('提示', '该任务已存在，请勿重复添加！', false);
                         textInput.focus();
                         return;
                     }
@@ -2198,7 +2161,7 @@
 
             // 检查并显示空列表提示的函数
             function checkEmptyState() {
-                const tasks = getAllTasks();
+                const tasks = getAllTaskElements();
                 const emptyState = document.querySelector('.empty-state');
                 
                 if (tasks.length === 0 && emptyState) {
@@ -2210,14 +2173,14 @@
             // 清空所有任务的函数
             async function clearAllTasks() {
                 // 使用自定义弹窗进行二次确认
-                const confirmed = await showConfirm(
+                const confirmed = await showConfirmDialog(
                     '清空所有任务',
                     '确定要清空所有任务吗？此操作不可恢复！',
                     true
                 );
                 
                 if (confirmed) {
-                    const allTasks = getAllTasks();
+                    const allTasks = getAllTaskElements();
                     allTasks.forEach(function(task) {
                         task.remove();
                     });
@@ -2233,10 +2196,10 @@
             // 清空已完成任务的函数
             async function clearCompletedTasks() {
                 // 获取所有已完成的任务
-                const completedTasks = getCompletedTasks();
+                const completedTasks = getCompletedTaskElements();
                 
                 if (completedTasks.length === 0) {
-                    await showConfirm(
+                    await showConfirmDialog(
                         '提示',
                         '没有已完成的任务！',
                         false
@@ -2245,7 +2208,7 @@
                 }
                 
                 // 使用自定义弹窗进行二次确认
-                const confirmed = await showConfirm(
+                const confirmed = await showConfirmDialog(
                     '清空已完成任务',
                     `确定要清空 ${completedTasks.length} 个已完成的任务吗？此操作不可恢复！`,
                     true
@@ -2265,7 +2228,7 @@
             }
 
             // 为已存在的任务添加事件监听（页面初始的任务）
-            const existingTasks = getAllTasks();
+            const existingTasks = getAllTaskElements();
             existingTasks.forEach(function(taskItem) {
                 // 为完成按钮添加事件
                 const completeBtn = taskItem.querySelector('.complete-btn');
@@ -2288,7 +2251,7 @@
 
             // 定期更新所有任务的逾期状态（每分钟检查一次）
             setInterval(function() {
-                const allTasks = getAllTasks();
+                const allTasks = getAllTaskElements();
                 allTasks.forEach(function(taskItem) {
                     // 更新逾期状态
                     updateTaskOverdueStatus(taskItem);
@@ -2308,7 +2271,7 @@
             // 保存任务列表到 localStorage
             function saveTasksToStorage() {
                 // 获取所有任务项
-                const allTasks = getAllTasks();
+                const allTasks = getAllTaskElements();
                 const tasksData = [];
 
                 // 遍历所有任务，提取任务内容、完成状态、优先级、分类、时间戳、到期时间和完成时间
@@ -2365,7 +2328,7 @@
 
                     // 遍历任务数据，创建任务项
                     tasksData.forEach(function(taskData) {
-                        createTaskItemFromData(taskData.text, taskData.completed, taskData.priority || 'P0', taskData.category || 'work', taskData.timestamp || Date.now(), taskData.dueDate || null, taskData.completedAt || null);
+                        createTaskFromStoredData(taskData.text, taskData.completed, taskData.priority || 'P0', taskData.category || 'work', taskData.timestamp || Date.now(), taskData.dueDate || null, taskData.completedAt || null);
                     });
                 } catch (error) {
                     // 如果数据格式错误，清除无效数据
@@ -2375,7 +2338,7 @@
             }
 
             // 从数据创建任务项（用于加载保存的任务）
-            function createTaskItemFromData(taskText, isCompleted, priority, category, timestamp, dueDate, completedAt) {
+            function createTaskFromStoredData(taskText, isCompleted, priority, category, timestamp, dueDate, completedAt) {
                 // 创建任务项容器
                 const taskItem = document.createElement('div');
                 taskItem.className = 'task-item';
@@ -2408,8 +2371,7 @@
                 // 创建分类标签
                 const categoryTag = document.createElement('span');
                 categoryTag.className = 'category-tag ' + (category || 'work');
-                const categoryNames = { work: '工作', life: '生活', study: '学习' };
-                categoryTag.textContent = categoryNames[category || 'work'];
+                categoryTag.textContent = CATEGORY_LABELS[category || 'work'];
                 
                 // 创建任务文本内容
                 const taskTextContent = document.createElement('span');
@@ -2503,7 +2465,7 @@
             let modalCallback = null;
 
             // 显示自定义确认弹窗
-            function showConfirm(title, message, isDanger = false) {
+            function showConfirmDialog(title, message, isDanger = false) {
                 return new Promise(function(resolve) {
                     modalTitle.textContent = title;
                     modalContent.textContent = message;
@@ -2625,7 +2587,7 @@
 
             // 搜索过滤任务的函数
             function filterTasks(searchText) {
-                const allTasks = getAllTasks();
+                const allTasks = getAllTaskElements();
                 const emptyState = document.querySelector('.empty-state');
                 let visibleCount = 0;
 
@@ -2694,7 +2656,7 @@
 
             // 打开统计弹窗
             statsBtn.addEventListener('click', function() {
-                updateStatistics();
+                refreshStatisticsDisplay();
                 statsModalOverlay.classList.add('active');
             });
 
@@ -2730,11 +2692,11 @@
             });
 
             // 更新统计数据
-            function updateStatistics() {
+            function refreshStatisticsDisplay() {
                 const timeRanges = getTimeRanges();
 
                 // 获取所有任务
-                const allTasks = getAllTasks();
+                const allTasks = getAllTaskElements();
 
                 // 按截止时间（到期时间）维度分类任务
                 // 今日：到期时间在今天的任务
@@ -2784,12 +2746,12 @@
                 calculateStats('day', dayTasks, dayCompletedTasks);
                 calculateStats('week', weekTasks, weekCompletedTasks);
                 calculateStats('month', monthTasks, monthCompletedTasks);
-                calculateStats('all', allTasks, getCompletedTasks());
+                calculateStats('all', allTasks, getCompletedTaskElements());
 
                 // 计算分类统计（仅全部）
-                updateElementText('all-work', getTasksByCategory('work').length);
-                updateElementText('all-life', getTasksByCategory('life').length);
-                updateElementText('all-study', getTasksByCategory('study').length);
+                updateElementText('all-work', getTaskElementsByCategory('work').length);
+                updateElementText('all-life', getTaskElementsByCategory('life').length);
+                updateElementText('all-study', getTaskElementsByCategory('study').length);
             }
 
             // 计算统计数据
@@ -2840,7 +2802,7 @@
                 this.style.opacity = '1';
                 
                 // 移除所有拖拽样式
-                const allItems = getAllTasks();
+                const allItems = getAllTaskElements();
                 allItems.forEach(function(item) {
                     item.classList.remove('drag-over');
                 });
@@ -2887,7 +2849,7 @@
                     // 只允许在相同完成状态的任务之间拖拽
                     if (draggedCompleted === targetCompleted) {
                         // 获取所有任务项
-                        const allItems = getAllTasks();
+                        const allItems = getAllTaskElements();
                         const draggedIndex = allItems.indexOf(draggedItem);
                         const targetIndex = allItems.indexOf(this);
                         
