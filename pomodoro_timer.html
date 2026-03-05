@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>番茄钟计时器</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 页面整体样式 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: background 0.5s ease;
+        }
+
+        /* 休息模式背景 */
+        body.break-mode {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+        }
+
+        /* 主容器 */
+        .container {
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 100%;
+            padding: 50px 40px;
+            text-align: center;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        /* 淡入动画 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 页面标题 */
+        .title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        /* 番茄图标 */
+        .tomato-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        /* 弹跳动画 */
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* 模式指示器 */
+        .mode-indicator {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            padding: 12px 24px;
+            border-radius: 25px;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        /* 工作模式样式 */
+        .work-mode {
+            background: linear-gradient(135deg, #ff6b6b, #ffa500);
+            color: white;
+        }
+
+        /* 休息模式样式 */
+        .break-mode-indicator {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+
+        /* 倒计时显示区域 */
+        .timer-display {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 20px;
+            padding: 40px 20px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 进度环背景 */
+        .progress-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+        }
+
+        .progress-ring-circle {
+            fill: none;
+            stroke: #e2e8f0;
+            stroke-width: 8;
+        }
+
+        .progress-ring-progress {
+            fill: none;
+            stroke: #ff6b6b;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            transition: stroke-dasharray 1s ease;
+        }
+
+        /* 时间显示 */
+        .time-display {
+            font-size: 72px;
+            font-weight: 700;
+            color: #2d3748;
+            font-family: 'Courier New', monospace;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 时间单位标签 */
+        .time-label {
+            font-size: 16px;
+            color: #718096;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        /* 按钮组容器 */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        /* 按钮基础样式 */
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            min-width: 140px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* 开始按钮 */
+        .start-btn {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+
+        /* 重置按钮 */
+        .reset-btn {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+            color: white;
+        }
+
+        /* 统计信息 */
+        .stats {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stats-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ff6b6b;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #718096;
+            margin-top: 5px;
+        }
+
+        /* 设置面板 */
+        .settings {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .settings-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .setting-label {
+            font-size: 16px;
+            color: #4a5568;
+        }
+
+        .setting-input {
+            width: 80px;
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .setting-input:focus {
+            outline: none;
+            border-color: #ff6b6b;
+        }
+
+        /* 提醒消息 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.5s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .notification.work-complete {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        }
+
+        .notification.break-complete {
+            background: linear-gradient(135deg, #ff6b6b, #ffa500);
+        }
+
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            color: #718096;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+
+        /* 响应式设计 - 平板 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 30px;
+            }
+
+            .title {
+                font-size: 28px;
+            }
+
+            .time-display {
+                font-size: 56px;
+            }
+
+            .progress-ring {
+                width: 160px;
+                height: 160px;
+            }
+
+            .btn {
+                padding: 12px 24px;
+                font-size: 16px;
+                min-width: 120px;
+            }
+        }
+
+        /* 响应式设计 - 手机 */
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 30px 20px;
+            }
+
+            .title {
+                font-size: 24px;
+            }
+
+            .tomato-icon {
+                font-size: 36px;
+            }
+
+            .mode-indicator {
+                font-size: 16px;
+                padding: 10px 20px;
+            }
+
+            .timer-display {
+                padding: 30px 15px;
+            }
+
+            .time-display {
+                font-size: 48px;
+            }
+
+            .progress-ring {
+                width: 140px;
+                height: 140px;
+            }
+
+            .button-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn {
+                width: 100%;
+                padding: 12px 20px;
+                font-size: 16px;
+                min-width: auto;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .setting-item {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 番茄图标 -->
+        <div class="tomato-icon">🍅</div>
+        
+        <!-- 页面标题 -->
+        <h1 class="title">番茄钟计时器</h1>
+
+        <!-- 模式指示器 -->
+        <div class="mode-indicator work-mode" id="mode-indicator">
+            工作时间
+        </div>
+
+        <!-- 倒计时显示区域 -->
+        <div class="timer-display">
+            <!-- 进度环 -->
+            <svg class="progress-ring">
+                <circle class="progress-ring-circle" cx="100" cy="100" r="90"></circle>
+                <circle class="progress-ring-progress" cx="100" cy="100" r="90" 
+                        stroke-dasharray="565.48" stroke-dashoffset="0" id="progress-circle"></circle>
+            </svg>
+            
+            <!-- 时间显示 -->
+            <div class="time-display" id="time-display">25:00</div>
+            <div class="time-label">分钟:秒钟</div>
+        </div>
+
+        <!-- 按钮组 -->
+        <div class="button-group">
+            <button class="btn start-btn" id="start-btn">▶️ 开始</button>
+            <button class="btn reset-btn" id="reset-btn">🔄 重置</button>
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="stats">
+            <div class="stats-title">今日统计</div>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-number" id="completed-pomodoros">0</span>
+                    <div class="stat-label">完成番茄</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="total-focus-time">0</span>
+                    <div class="stat-label">专注时间(分)</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="break-time">0</span>
+                    <div class="stat-label">休息时间(分)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 设置面板 -->
+        <div class="settings">
+            <div class="settings-title">⚙️ 时间设置</div>
+            <div class="setting-item">
+                <span class="setting-label">工作时间</span>
+                <input type="number" class="setting-input" id="work-time" value="25" min="1" max="60">
+            </div>
+            <div class="setting-item">
+                <span class="setting-label">休息时间</span>
+                <input type="number" class="setting-input" id="break-time-setting" value="5" min="1" max="30">
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="footer">
+            🍅 专注工作，高效生活
+        </div>
+    </div>
+
+    <!-- 提醒消息 -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // 获取页面元素
+        const timeDisplay = document.getElementById('time-display');
+        const modeIndicator = document.getElementById('mode-indicator');
+        const startBtn = document.getElementById('start-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const progressCircle = document.getElementById('progress-circle');
+        const notification = document.getElementById('notification');
+        const completedPomodoros = document.getElementById('completed-pomodoros');
+        const totalFocusTime = document.getElementById('total-focus-time');
+        const breakTimeElement = document.getElementById('break-time');
+        const workTimeInput = document.getElementById('work-time');
+        const breakTimeInput = document.getElementById('break-time-setting');
+
+        // 计时器状态
+        let isRunning = false;
+        let isWorkMode = true;
+        let timeLeft = 25 * 60; // 25分钟，以秒为单位
+        let totalTime = 25 * 60;
+        let timerInterval = null;
+
+        // 统计数据
+        let stats = {
+            completedPomodoros: 0,
+            totalFocusTime: 0,
+            breakTime: 0
+        };
+
+        // 从localStorage加载统计数据
+        function loadStats() {
+            const savedStats = localStorage.getItem('pomodoroStats');
+            if (savedStats) {
+                stats = JSON.parse(savedStats);
+                updateStatsDisplay();
+            }
+        }
+
+        // 保存统计数据到localStorage
+        function saveStats() {
+            localStorage.setItem('pomodoroStats', JSON.stringify(stats));
+        }
+
+        // 更新统计显示
+        function updateStatsDisplay() {
+            completedPomodoros.textContent = stats.completedPomodoros;
+            totalFocusTime.textContent = stats.totalFocusTime;
+            breakTimeElement.textContent = stats.breakTime;
+        }
+
+        // 格式化时间显示
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+
+        // 更新进度环
+        function updateProgressRing() {
+            const circumference = 2 * Math.PI * 90; // 半径为90的圆周长
+            const progress = (totalTime - timeLeft) / totalTime;
+            const offset = circumference * (1 - progress);
+            progressCircle.style.strokeDashoffset = offset;
+            
+            // 根据模式改变进度环颜色
+            if (isWorkMode) {
+                progressCircle.style.stroke = '#ff6b6b';
+            } else {
+                progressCircle.style.stroke = '#4ecdc4';
+            }
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            timeDisplay.textContent = formatTime(timeLeft);
+            updateProgressRing();
+            
+            // 更新模式指示器
+            if (isWorkMode) {
+                modeIndicator.textContent = '工作时间';
+                modeIndicator.className = 'mode-indicator work-mode';
+                document.body.classList.remove('break-mode');
+            } else {
+                modeIndicator.textContent = '休息时间';
+                modeIndicator.className = 'mode-indicator break-mode-indicator';
+                document.body.classList.add('break-mode');
+            }
+        }
+
+        // 显示通知
+        function showNotification(message, type = '') {
+            notification.textContent = message;
+            notification.className = `notification show ${type}`;
+            
+            // 3秒后隐藏通知
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // 播放提醒音效（使用Web Audio API创建简单音效）
+        function playNotificationSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (error) {
+                console.log('音效播放失败:', error);
+            }
+        }
+
+        // 计时器倒计时
+        function countdown() {
+            if (timeLeft > 0) {
+                timeLeft--;
+                updateDisplay();
+            } else {
+                // 时间到了
+                clearInterval(timerInterval);
+                isRunning = false;
+                
+                // 播放提醒音效
+                playNotificationSound();
+                
+                if (isWorkMode) {
+                    // 工作时间结束
+                    stats.completedPomodoros++;
+                    stats.totalFocusTime += parseInt(workTimeInput.value);
+                    showNotification('🎉 工作时间结束！该休息一下了', 'work-complete');
+                    
+                    // 切换到休息模式
+                    isWorkMode = false;
+                    timeLeft = parseInt(breakTimeInput.value) * 60;
+                    totalTime = timeLeft;
+                } else {
+                    // 休息时间结束
+                    stats.breakTime += parseInt(breakTimeInput.value);
+                    showNotification('⏰ 休息结束！准备开始新的工作周期', 'break-complete');
+                    
+                    // 切换到工作模式
+                    isWorkMode = true;
+                    timeLeft = parseInt(workTimeInput.value) * 60;
+                    totalTime = timeLeft;
+                }
+                
+                updateDisplay();
+                updateStatsDisplay();
+                saveStats();
+                
+                // 重置按钮状态
+                startBtn.textContent = '▶️ 开始';
+            }
+        }
+
+        // 开始/暂停按钮点击事件
+        startBtn.addEventListener('click', function() {
+            if (!isRunning) {
+                // 开始计时
+                isRunning = true;
+                timerInterval = setInterval(countdown, 1000);
+                startBtn.textContent = '⏸️ 暂停';
+                showNotification(isWorkMode ? '开始专注工作！' : '开始休息时间！');
+            } else {
+                // 暂停计时
+                isRunning = false;
+                clearInterval(timerInterval);
+                startBtn.textContent = '▶️ 继续';
+                showNotification('计时器已暂停');
+            }
+        });
+
+        // 重置按钮点击事件
+        resetBtn.addEventListener('click', function() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            
+            // 重置到工作模式
+            isWorkMode = true;
+            timeLeft = parseInt(workTimeInput.value) * 60;
+            totalTime = timeLeft;
+            
+            updateDisplay();
+            startBtn.textContent = '▶️ 开始';
+            showNotification('计时器已重置');
+        });
+
+        // 时间设置输入框变化事件
+        workTimeInput.addEventListener('change', function() {
+            if (!isRunning && isWorkMode) {
+                timeLeft = parseInt(this.value) * 60;
+                totalTime = timeLeft;
+                updateDisplay();
+            }
+        });
+
+        breakTimeInput.addEventListener('change', function() {
+            if (!isRunning && !isWorkMode) {
+                timeLeft = parseInt(this.value) * 60;
+                totalTime = timeLeft;
+                updateDisplay();
+            }
+        });
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            updateDisplay();
+            
+            // 检查浏览器通知权限
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        });
+
+        // 页面可见性变化时的处理（防止后台运行时计时不准确）
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && isRunning) {
+                // 页面隐藏时记录时间
+                localStorage.setItem('pomodoroHiddenTime', Date.now());
+            } else if (!document.hidden && isRunning) {
+                // 页面显示时计算经过的时间
+                const hiddenTime = localStorage.getItem('pomodoroHiddenTime');
+                if (hiddenTime) {
+                    const elapsedSeconds = Math.floor((Date.now() - parseInt(hiddenTime)) / 1000);
+                    timeLeft = Math.max(0, timeLeft - elapsedSeconds);
+                    updateDisplay();
+                    localStorage.removeItem('pomodoroHiddenTime');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

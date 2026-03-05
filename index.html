@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的项目集合</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 页面整体样式 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* 页面标题 */
+        .main-title {
+            text-align: center;
+            color: white;
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        /* 副标题 */
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 20px;
+            margin-bottom: 60px;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        /* 项目分类网格 */
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        /* 分类卡片 */
+        .category-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.8s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-card:nth-child(1) { animation-delay: 0.1s; }
+        .category-card:nth-child(2) { animation-delay: 0.2s; }
+        .category-card:nth-child(3) { animation-delay: 0.3s; }
+        .category-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .category-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25);
+        }
+
+        /* 分类卡片背景装饰 */
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-color);
+        }
+
+        /* 分类图标 */
+        .category-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* 分类标题 */
+        .category-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        /* 分类描述 */
+        .category-description {
+            color: #718096;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        /* 项目列表 */
+        .project-list {
+            list-style: none;
+        }
+
+        .project-item {
+            margin-bottom: 12px;
+            padding: 12px 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .project-item:hover {
+            background: #edf2f7;
+            transform: translateX(5px);
+        }
+
+        .project-link {
+            text-decoration: none;
+            color: #4a5568;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .project-link:hover {
+            color: var(--accent-color);
+        }
+
+        /* 即将推出标签 */
+        .coming-soon {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #8b4513;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        /* 不同分类的主题色 */
+        .personal-tools {
+            --accent-color: #667eea;
+        }
+
+        .efficiency-tools {
+            --accent-color: #f093fb;
+        }
+
+        .content-creation {
+            --accent-color: #4facfe;
+        }
+
+        .data-visualization {
+            --accent-color: #43e97b;
+        }
+
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
+            margin-top: 40px;
+            animation: fadeIn 1s ease-out 0.6s both;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* 动画定义 */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* 响应式设计 - 平板 */
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 36px;
+            }
+
+            .subtitle {
+                font-size: 18px;
+                margin-bottom: 40px;
+            }
+
+            .categories-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .category-card {
+                padding: 25px;
+            }
+        }
+
+        /* 响应式设计 - 手机 */
+        @media (max-width: 480px) {
+            body {
+                padding: 20px 15px;
+            }
+
+            .main-title {
+                font-size: 28px;
+            }
+
+            .subtitle {
+                font-size: 16px;
+            }
+
+            .category-card {
+                padding: 20px;
+            }
+
+            .category-icon {
+                font-size: 40px;
+            }
+
+            .category-title {
+                font-size: 20px;
+            }
+
+            .category-description {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 页面标题 -->
+        <h1 class="main-title">我的项目集合</h1>
+        <p class="subtitle">用 AI 辅助编程，记录学习成长的每一步</p>
+
+        <!-- 项目分类网格 -->
+        <div class="categories-grid">
+            <!-- 个人工具类 -->
+            <div class="category-card personal-tools">
+                <div class="category-icon">🛠️</div>
+                <h2 class="category-title">个人工具类</h2>
+                <p class="category-description">提升个人效率和生活品质的实用工具</p>
+                <ul class="project-list">
+                    <li class="project-item">
+                        <a href="todo-v1-final.html" class="project-link">
+                            📝 待办清单管理器
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="daily_quotes.html" class="project-link">
+                            📖 每日名言展示器
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="pomodoro_timer.html" class="project-link">
+                            ⏰ 番茄钟计时器
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            📊 习惯追踪器 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 效率工具类 -->
+            <div class="category-card efficiency-tools">
+                <div class="category-icon">⚡</div>
+                <h2 class="category-title">效率工具类</h2>
+                <p class="category-description">专注于提升工作和学习效率的专业工具</p>
+                <ul class="project-list">
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            🔗 链接收藏夹 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            📋 剪贴板管理器 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            🎯 目标管理器 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            📅 日程规划器 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 内容创作类 -->
+            <div class="category-card content-creation">
+                <div class="category-icon">✨</div>
+                <h2 class="category-title">内容创作类</h2>
+                <p class="category-description">帮助创作者提升内容质量和创作效率</p>
+                <ul class="project-list">
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            ✍️ Markdown 编辑器 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            🎨 配色方案生成器 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            📸 图片压缩工具 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            🔤 文本格式转换器 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 数据可视化类 -->
+            <div class="category-card data-visualization">
+                <div class="category-icon">📊</div>
+                <h2 class="category-title">数据可视化类</h2>
+                <p class="category-description">将复杂数据转化为直观易懂的可视化图表</p>
+                <ul class="project-list">
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            📈 图表生成器 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            🗺️ 数据地图 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            📊 仪表盘制作器 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            📉 数据分析工具 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="footer">
+            <p>✨ 持续更新中，敬请期待更多精彩项目 ✨</p>
+            <p>Made with ❤️ by <a href="#">[刘大手]</a></p>
+        </div>
+    </div>
+
+    <script>
+        // 添加页面加载动画
+        document.addEventListener('DOMContentLoaded', function() {
+            // 为即将推出的项目添加点击提示
+            const comingSoonLinks = document.querySelectorAll('a[href="#"]');
+            comingSoonLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // 创建提示框
+                    const tooltip = document.createElement('div');
+                    tooltip.textContent = '敬请期待，正在开发中...';
+                    tooltip.style.cssText = `
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        background: rgba(0, 0, 0, 0.8);
+                        color: white;
+                        padding: 15px 25px;
+                        border-radius: 8px;
+                        font-size: 16px;
+                        z-index: 1000;
+                        animation: fadeIn 0.3s ease;
+                    `;
+                    
+                    document.body.appendChild(tooltip);
+                    
+                    // 2秒后移除提示框
+                    setTimeout(() => {
+                        tooltip.style.animation = 'fadeOut 0.3s ease';
+                        setTimeout(() => {
+                            document.body.removeChild(tooltip);
+                        }, 300);
+                    }, 2000);
+                });
+            });
+        });
+
+        // 添加淡出动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
