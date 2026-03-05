@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倒计时页</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 页面整体样式 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 主容器 */
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* 页面标题 */
+        .main-title {
+            text-align: center;
+            color: white;
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        /* 设置卡片 */
+        .setup-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            margin-bottom: 30px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        /* 表单布局 */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.4);
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+        }
+
+        /* 倒计时显示区域 */
+        .countdown-display {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .countdown-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .countdown-subtitle {
+            font-size: 18px;
+            color: #718096;
+            margin-bottom: 30px;
+        }
+        /* 倒计时数字显示 */
+        .countdown-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .countdown-item {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 16px;
+            padding: 25px 15px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .countdown-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .countdown-number {
+            font-size: 48px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .countdown-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #4a5568;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* 进度条 */
+        .progress-container {
+            margin-bottom: 30px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #4a5568;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 6px;
+            transition: width 1s ease;
+            width: 0%;
+        }
+
+        /* 目标信息 */
+        .target-info {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .target-date {
+            font-size: 20px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .target-description {
+            font-size: 16px;
+            color: #4a5568;
+        }
+        /* 操作按钮组 */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        /* 预设目标 */
+        .preset-goals {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .preset-goal {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .preset-goal:hover {
+            background: #edf2f7;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .preset-goal.selected {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-color: #667eea;
+        }
+
+        .preset-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .preset-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .preset-desc {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #a0aec0;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-text {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .empty-hint {
+            font-size: 16px;
+        }
+
+        /* 提示消息 */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #48bb78;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            background: #f56565;
+        }
+        /* 动画定义 */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        /* 特殊效果 */
+        .countdown-item.highlight {
+            animation: pulse 2s infinite;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .countdown-item.highlight .countdown-number {
+            color: white;
+        }
+
+        .countdown-item.highlight .countdown-label {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* 响应式设计 - 平板 */
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 36px;
+            }
+
+            .setup-card, .countdown-display {
+                padding: 25px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .countdown-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .countdown-number {
+                font-size: 36px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .preset-goals {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 响应式设计 - 手机 */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .main-title {
+                font-size: 28px;
+                margin-bottom: 30px;
+            }
+
+            .setup-card, .countdown-display {
+                padding: 20px;
+            }
+
+            .countdown-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .countdown-item {
+                padding: 20px 10px;
+            }
+
+            .countdown-number {
+                font-size: 28px;
+            }
+
+            .countdown-label {
+                font-size: 14px;
+            }
+
+            .countdown-title {
+                font-size: 24px;
+            }
+
+            .countdown-subtitle {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 页面标题 -->
+        <h1 class="main-title">⏰ 倒计时页</h1>
+
+        <!-- 设置目标卡片 -->
+        <div class="setup-card" id="setupCard">
+            <h2 class="card-title">
+                🎯 设置目标日期
+            </h2>
+
+            <!-- 预设目标选择 -->
+            <div class="form-group">
+                <label class="form-label">快速选择</label>
+                <div class="preset-goals">
+                    <div class="preset-goal" onclick="selectPreset('birthday')">
+                        <div class="preset-icon">🎂</div>
+                        <div class="preset-title">生日倒计时</div>
+                        <div class="preset-desc">距离生日还有多久</div>
+                    </div>
+                    <div class="preset-goal" onclick="selectPreset('exam')">
+                        <div class="preset-icon">📚</div>
+                        <div class="preset-title">考试倒计时</div>
+                        <div class="preset-desc">重要考试准备时间</div>
+                    </div>
+                    <div class="preset-goal" onclick="selectPreset('holiday')">
+                        <div class="preset-icon">🏖️</div>
+                        <div class="preset-title">假期倒计时</div>
+                        <div class="preset-desc">期待的假期时光</div>
+                    </div>
+                    <div class="preset-goal" onclick="selectPreset('wedding')">
+                        <div class="preset-icon">💒</div>
+                        <div class="preset-title">婚礼倒计时</div>
+                        <div class="preset-desc">人生重要时刻</div>
+                    </div>
+                    <div class="preset-goal" onclick="selectPreset('graduation')">
+                        <div class="preset-icon">🎓</div>
+                        <div class="preset-title">毕业倒计时</div>
+                        <div class="preset-desc">学业完成时间</div>
+                    </div>
+                    <div class="preset-goal" onclick="selectPreset('custom')">
+                        <div class="preset-icon">⭐</div>
+                        <div class="preset-title">自定义目标</div>
+                        <div class="preset-desc">设置专属目标</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 目标设置表单 -->
+            <form id="countdownForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">目标名称</label>
+                        <input type="text" class="form-input" id="goalName" placeholder="例如：我的生日" maxlength="50">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">目标日期</label>
+                        <input type="datetime-local" class="form-input" id="targetDate">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">描述（可选）</label>
+                    <input type="text" class="form-input" id="goalDescription" placeholder="为这个特殊的日子添加描述..." maxlength="100">
+                </div>
+
+                <div class="action-buttons">
+                    <button type="submit" class="btn btn-primary">
+                        🚀 开始倒计时
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="clearBtn" onclick="clearCountdown()">
+                        🧹 清除设置
+                    </button>
+                </div>
+            </form>
+        </div>
+        <!-- 倒计时显示区域 -->
+        <div class="countdown-display" id="countdownDisplay" style="display: none;">
+            <!-- 目标信息 -->
+            <div class="target-info" id="targetInfo">
+                <div class="target-date" id="displayTargetDate">2024年12月25日 00:00</div>
+                <div class="target-description" id="displayDescription">圣诞节快乐！</div>
+            </div>
+
+            <!-- 倒计时标题 -->
+            <div class="countdown-title" id="displayGoalName">圣诞节倒计时</div>
+            <div class="countdown-subtitle">距离目标还有</div>
+
+            <!-- 倒计时数字 -->
+            <div class="countdown-grid">
+                <div class="countdown-item">
+                    <div class="countdown-number" id="daysCount">365</div>
+                    <div class="countdown-label">天</div>
+                </div>
+                <div class="countdown-item">
+                    <div class="countdown-number" id="hoursCount">24</div>
+                    <div class="countdown-label">时</div>
+                </div>
+                <div class="countdown-item">
+                    <div class="countdown-number" id="minutesCount">60</div>
+                    <div class="countdown-label">分</div>
+                </div>
+                <div class="countdown-item highlight">
+                    <div class="countdown-number" id="secondsCount">60</div>
+                    <div class="countdown-label">秒</div>
+                </div>
+            </div>
+
+            <!-- 进度条 -->
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span>时间进度</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="editCountdown()">
+                    ✏️ 编辑目标
+                </button>
+                <button class="btn btn-danger" onclick="deleteCountdown()">
+                    🗑️ 删除倒计时
+                </button>
+            </div>
+        </div>
+
+        <!-- 空状态 -->
+        <div class="countdown-display empty-state" id="emptyState">
+            <div class="empty-icon">⏰</div>
+            <div class="empty-text">还没有设置倒计时</div>
+            <div class="empty-hint">选择一个目标日期，开始你的倒计时之旅吧！</div>
+        </div>
+    </div>
+
+    <!-- 提示消息 -->
+    <div class="toast" id="toast"></div>
+    <script>
+        // 全局变量
+        let countdownData = null;
+        let countdownInterval = null;
+        let selectedPreset = null;
+
+        // DOM元素
+        const setupCard = document.getElementById('setupCard');
+        const countdownDisplay = document.getElementById('countdownDisplay');
+        const emptyState = document.getElementById('emptyState');
+        const countdownForm = document.getElementById('countdownForm');
+        const goalNameInput = document.getElementById('goalName');
+        const targetDateInput = document.getElementById('targetDate');
+        const goalDescriptionInput = document.getElementById('goalDescription');
+        const toast = document.getElementById('toast');
+
+        // 显示元素
+        const displayGoalName = document.getElementById('displayGoalName');
+        const displayTargetDate = document.getElementById('displayTargetDate');
+        const displayDescription = document.getElementById('displayDescription');
+        const daysCount = document.getElementById('daysCount');
+        const hoursCount = document.getElementById('hoursCount');
+        const minutesCount = document.getElementById('minutesCount');
+        const secondsCount = document.getElementById('secondsCount');
+        const progressFill = document.getElementById('progressFill');
+        const progressPercent = document.getElementById('progressPercent');
+
+        // 预设目标数据
+        const presetGoals = {
+            birthday: {
+                name: '我的生日',
+                description: '又长大了一岁，值得庆祝的日子！',
+                icon: '🎂'
+            },
+            exam: {
+                name: '重要考试',
+                description: '努力准备，相信自己一定能成功！',
+                icon: '📚'
+            },
+            holiday: {
+                name: '期待假期',
+                description: '放松身心，享受美好时光！',
+                icon: '🏖️'
+            },
+            wedding: {
+                name: '婚礼大日子',
+                description: '人生最重要的时刻即将到来！',
+                icon: '💒'
+            },
+            graduation: {
+                name: '毕业典礼',
+                description: '学业即将完成，新的人生阶段开始！',
+                icon: '🎓'
+            },
+            custom: {
+                name: '我的目标',
+                description: '为自己设定的特殊目标',
+                icon: '⭐'
+            }
+        };
+
+        // 初始化应用
+        function init() {
+            loadCountdownFromStorage();
+            setupEventListeners();
+            updateDisplay();
+            
+            // 设置默认日期为明天
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+            targetDateInput.value = formatDateTimeLocal(tomorrow);
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            countdownForm.addEventListener('submit', handleFormSubmit);
+        }
+
+        // 选择预设目标
+        function selectPreset(presetType) {
+            selectedPreset = presetType;
+            
+            // 更新选中状态
+            document.querySelectorAll('.preset-goal').forEach(goal => {
+                goal.classList.remove('selected');
+            });
+            event.target.closest('.preset-goal').classList.add('selected');
+            
+            // 填充表单
+            const preset = presetGoals[presetType];
+            goalNameInput.value = preset.name;
+            goalDescriptionInput.value = preset.description;
+            
+            showToast(`已选择${preset.icon} ${preset.name}`);
+        }
+        // 处理表单提交
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const goalName = goalNameInput.value.trim();
+            const targetDate = targetDateInput.value;
+            const description = goalDescriptionInput.value.trim();
+            
+            if (!goalName) {
+                showToast('请输入目标名称', 'error');
+                return;
+            }
+            
+            if (!targetDate) {
+                showToast('请选择目标日期', 'error');
+                return;
+            }
+            
+            const targetDateTime = new Date(targetDate);
+            const now = new Date();
+            
+            if (targetDateTime <= now) {
+                showToast('目标日期必须是未来时间', 'error');
+                return;
+            }
+            
+            // 创建倒计时数据
+            countdownData = {
+                goalName: goalName,
+                targetDate: targetDateTime.toISOString(),
+                description: description,
+                createdAt: now.toISOString(),
+                preset: selectedPreset
+            };
+            
+            saveCountdownToStorage();
+            startCountdown();
+            showToast('倒计时设置成功！');
+        }
+
+        // 开始倒计时
+        function startCountdown() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            updateDisplay();
+            updateCountdown();
+            
+            // 每秒更新一次
+            countdownInterval = setInterval(updateCountdown, 1000);
+        }
+
+        // 更新倒计时显示
+        function updateCountdown() {
+            if (!countdownData) return;
+            
+            const now = new Date();
+            const target = new Date(countdownData.targetDate);
+            const timeDiff = target - now;
+            
+            if (timeDiff <= 0) {
+                // 倒计时结束
+                clearInterval(countdownInterval);
+                showCountdownFinished();
+                return;
+            }
+            
+            // 计算时间差
+            const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+            
+            // 更新显示
+            daysCount.textContent = days;
+            hoursCount.textContent = hours.toString().padStart(2, '0');
+            minutesCount.textContent = minutes.toString().padStart(2, '0');
+            secondsCount.textContent = seconds.toString().padStart(2, '0');
+            
+            // 更新进度条
+            updateProgress();
+        }
+
+        // 更新进度条
+        function updateProgress() {
+            if (!countdownData) return;
+            
+            const now = new Date();
+            const target = new Date(countdownData.targetDate);
+            const created = new Date(countdownData.createdAt);
+            
+            const totalTime = target - created;
+            const elapsedTime = now - created;
+            const progress = Math.min((elapsedTime / totalTime) * 100, 100);
+            
+            progressFill.style.width = progress + '%';
+            progressPercent.textContent = Math.round(progress) + '%';
+        }
+        // 显示倒计时结束
+        function showCountdownFinished() {
+            daysCount.textContent = '0';
+            hoursCount.textContent = '00';
+            minutesCount.textContent = '00';
+            secondsCount.textContent = '00';
+            
+            // 添加特殊效果
+            document.querySelectorAll('.countdown-item').forEach(item => {
+                item.classList.add('highlight');
+            });
+            
+            showToast('🎉 倒计时结束！目标时间已到达！');
+        }
+
+        // 更新显示状态
+        function updateDisplay() {
+            if (countdownData) {
+                // 显示倒计时
+                setupCard.style.display = 'none';
+                emptyState.style.display = 'none';
+                countdownDisplay.style.display = 'block';
+                
+                // 更新目标信息
+                displayGoalName.textContent = countdownData.goalName;
+                displayTargetDate.textContent = formatDisplayDate(new Date(countdownData.targetDate));
+                displayDescription.textContent = countdownData.description || '加油，目标就在前方！';
+            } else {
+                // 显示空状态
+                setupCard.style.display = 'block';
+                countdownDisplay.style.display = 'none';
+                emptyState.style.display = 'block';
+            }
+        }
+
+        // 编辑倒计时
+        function editCountdown() {
+            if (!countdownData) return;
+            
+            // 填充表单数据
+            goalNameInput.value = countdownData.goalName;
+            goalDescriptionInput.value = countdownData.description || '';
+            targetDateInput.value = formatDateTimeLocal(new Date(countdownData.targetDate));
+            
+            // 显示设置卡片
+            setupCard.style.display = 'block';
+            countdownDisplay.style.display = 'none';
+            emptyState.style.display = 'none';
+            
+            // 停止当前倒计时
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+        }
+
+        // 删除倒计时
+        function deleteCountdown() {
+            if (!confirm('确定要删除当前倒计时吗？')) {
+                return;
+            }
+            
+            clearCountdown();
+            showToast('倒计时已删除');
+        }
+
+        // 清除倒计时
+        function clearCountdown() {
+            countdownData = null;
+            selectedPreset = null;
+            
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            // 清空表单
+            countdownForm.reset();
+            
+            // 清除选中状态
+            document.querySelectorAll('.preset-goal').forEach(goal => {
+                goal.classList.remove('selected');
+            });
+            
+            // 重置默认日期
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+            targetDateInput.value = formatDateTimeLocal(tomorrow);
+            
+            saveCountdownToStorage();
+            updateDisplay();
+        }
+        // 格式化日期时间为本地输入格式
+        function formatDateTimeLocal(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        // 格式化显示日期
+        function formatDisplayDate(date) {
+            return date.toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // 显示提示消息
+        function showToast(message, type = 'success') {
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // 数据持久化
+        function saveCountdownToStorage() {
+            if (countdownData) {
+                localStorage.setItem('countdownTimer_data', JSON.stringify(countdownData));
+            } else {
+                localStorage.removeItem('countdownTimer_data');
+            }
+        }
+
+        function loadCountdownFromStorage() {
+            const stored = localStorage.getItem('countdownTimer_data');
+            if (stored) {
+                try {
+                    countdownData = JSON.parse(stored);
+                    
+                    // 检查目标日期是否已过期
+                    const target = new Date(countdownData.targetDate);
+                    const now = new Date();
+                    
+                    if (target <= now) {
+                        // 目标已过期，清除数据
+                        countdownData = null;
+                        localStorage.removeItem('countdownTimer_data');
+                    }
+                } catch (e) {
+                    console.error('加载倒计时数据失败:', e);
+                    countdownData = null;
+                }
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+
+        // 页面可见性变化时更新倒计时
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && countdownData) {
+                updateCountdown();
+            }
+        });
+    </script>
+</body>
+</html>

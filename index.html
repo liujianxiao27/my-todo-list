@@ -115,6 +115,35 @@
         /* 项目列表 */
         .project-list {
             list-style: none;
+            max-height: 360px; /* 限制高度，约6个项目的高度 */
+            overflow-y: auto; /* 添加垂直滚动条 */
+            padding-right: 8px; /* 为滚动条留出空间 */
+        }
+
+        /* 自定义滚动条样式 */
+        .project-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .project-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .project-list::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+            transition: background 0.3s ease;
+        }
+
+        .project-list::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+
+        /* Firefox滚动条样式 */
+        .project-list {
+            scrollbar-width: thin;
+            scrollbar-color: #c1c1c1 #f1f1f1;
         }
 
         .project-item {
@@ -326,6 +355,16 @@
                             🔖 个人书签收藏
                         </a>
                     </li>
+                    <li class="project-item">
+                        <a href="simple_notepad.html" class="project-link">
+                            📝 简易笔记本
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="countdown_timer.html" class="project-link">
+                            ⏰ 倒计时页面
+                        </a>
+                    </li>
                 </ul>
             </div>
 
@@ -353,6 +392,26 @@
                     <li class="project-item">
                         <a href="#" class="project-link">
                             📅 日程规划器 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            📊 数据统计器 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            🔍 文件搜索器 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            ⚡ 快捷启动器 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            🗂️ 文档管理器 <span class="coming-soon">即将推出</span>
                         </a>
                     </li>
                 </ul>
@@ -384,6 +443,21 @@
                             🔤 文本格式转换器 <span class="coming-soon">即将推出</span>
                         </a>
                     </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            🖼️ 图片编辑器 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            📝 富文本编辑器 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            🎬 视频处理工具 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
 
@@ -411,6 +485,26 @@
                     <li class="project-item">
                         <a href="#" class="project-link">
                             📉 数据分析工具 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            📋 报表生成器 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            🎯 KPI监控面板 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            📊 数据透视表 <span class="coming-soon">即将推出</span>
+                        </a>
+                    </li>
+                    <li class="project-item">
+                        <a href="#" class="project-link">
+                            🔍 数据挖掘工具 <span class="coming-soon">即将推出</span>
                         </a>
                     </li>
                 </ul>

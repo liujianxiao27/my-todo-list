@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简易笔记本</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 页面整体样式 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+            height: calc(100vh - 40px);
+        }
+
+        /* 页面标题 */
+        .main-title {
+            text-align: center;
+            color: white;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            animation: fadeInDown 0.8s ease-out;
+            grid-column: 1 / -1;
+        }
+
+        /* 左侧面板 - 笔记列表 */
+        .sidebar {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            animation: fadeInLeft 0.8s ease-out;
+        }
+
+        /* 右侧面板 - 编辑器 */
+        .editor-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            animation: fadeInRight 0.8s ease-out;
+        }
+
+        /* 面板标题 */
+        .panel-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        /* 搜索框 */
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            font-size: 18px;
+        }
+
+        /* 新建笔记按钮 */
+        .new-note-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .new-note-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        /* 笔记列表 */
+        .notes-list {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        /* 自定义滚动条 */
+        .notes-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .notes-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .notes-list::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .notes-list::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+        /* 笔记项 */
+        .note-item {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .note-item:hover {
+            background: #edf2f7;
+            transform: translateX(5px);
+        }
+
+        .note-item.active {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-color: #667eea;
+        }
+
+        .note-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .note-preview {
+            font-size: 14px;
+            color: #718096;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .note-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #a0aec0;
+        }
+
+        .note-date {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .note-actions {
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .note-item:hover .note-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .action-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .delete-btn:hover {
+            color: #f56565;
+        }
+        /* 编辑器区域 */
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+            flex-shrink: 0; /* 防止头部被压缩 */
+        }
+
+        .editor-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0; /* 防止按钮被压缩 */
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+            transform: translateY(-1px);
+        }
+
+        /* 笔记标题输入框 */
+        .note-title-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            outline: none;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+            flex-shrink: 0; /* 防止输入框被压缩 */
+        }
+
+        .note-title-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* 格式化工具条 */
+        .formatting-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-bottom: none;
+            border-radius: 12px 12px 0 0;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding-right: 12px;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+            padding-right: 0;
+        }
+
+        .toolbar-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: #4a5568;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .toolbar-btn:hover {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .toolbar-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .toolbar-select {
+            padding: 4px 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            color: #4a5568;
+            font-size: 14px;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .toolbar-select:hover {
+            border-color: #cbd5e0;
+        }
+
+        .toolbar-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+
+        .color-picker {
+            width: 32px;
+            height: 32px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #000000;
+            transition: all 0.2s ease;
+        }
+
+        .color-picker:hover {
+            border-color: #cbd5e0;
+            transform: scale(1.05);
+        }
+
+        .color-input {
+            opacity: 0;
+            position: absolute;
+            pointer-events: none;
+        }
+
+        /* 笔记内容编辑器 - 富文本版本 */
+        .note-content-editor {
+            flex: 1;
+            width: 100%;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            font-size: 16px;
+            line-height: 1.6;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            min-height: 300px;
+            overflow-y: auto;
+        }
+
+        .note-content-editor:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* 富文本编辑器样式 */
+        .rich-editor {
+            border: none;
+            outline: none;
+        }
+
+        .rich-editor:empty:before {
+            content: attr(placeholder);
+            color: #a0aec0;
+            font-style: italic;
+        }
+
+        .rich-editor h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 16px 0 12px 0;
+            color: #2d3748;
+        }
+
+        .rich-editor h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 14px 0 10px 0;
+            color: #2d3748;
+        }
+
+        .rich-editor h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 12px 0 8px 0;
+            color: #2d3748;
+        }
+
+        .rich-editor p {
+            margin: 8px 0;
+        }
+
+        .rich-editor ul, .rich-editor ol {
+            margin: 8px 0;
+            padding-left: 24px;
+        }
+
+        .rich-editor li {
+            margin: 4px 0;
+        }
+
+        .rich-editor blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 16px;
+            margin: 12px 0;
+            color: #718096;
+            font-style: italic;
+        }
+
+        .rich-editor a {
+            color: #667eea;
+            text-decoration: underline;
+        }
+
+        .rich-editor a:hover {
+            color: #5a67d8;
+        }
+        /* 状态指示器 */
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #718096;
+            margin-top: 15px;
+            flex-shrink: 0; /* 防止状态指示器被压缩 */
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #48bb78;
+        }
+
+        .status-dot.saving {
+            background: #ed8936;
+            animation: pulse 1.5s infinite;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #a0aec0;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .empty-hint {
+            font-size: 14px;
+        }
+
+        /* 欢迎界面 */
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            color: #718096;
+        }
+
+        .welcome-icon {
+            font-size: 80px;
+            margin-bottom: 30px;
+            color: #667eea;
+        }
+
+        .welcome-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        .welcome-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .welcome-hint {
+            font-size: 16px;
+        }
+
+        /* 提示消息 */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #48bb78;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            background: #f56565;
+        }
+        /* 动画定义 */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* 响应式设计 - 平板 */
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 300px 1fr;
+                gap: 20px;
+            }
+
+            .main-title {
+                font-size: 28px;
+            }
+        }
+
+        /* 响应式设计 - 手机 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+                min-height: calc(100vh - 20px);
+            }
+
+            .main-title {
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+
+            .sidebar {
+                order: 2;
+                max-height: 400px;
+            }
+
+            .editor-panel {
+                order: 1;
+                min-height: 500px;
+            }
+
+            .welcome-icon {
+                font-size: 60px;
+            }
+
+            .welcome-title {
+                font-size: 24px;
+            }
+
+            .welcome-text {
+                font-size: 16px;
+            }
+
+            .formatting-toolbar {
+                padding: 8px;
+                gap: 4px;
+            }
+
+            .toolbar-group {
+                gap: 2px;
+                padding-right: 8px;
+            }
+
+            .toolbar-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
+            }
+
+            .toolbar-select {
+                font-size: 12px;
+                padding: 2px 4px;
+            }
+
+            .color-picker {
+                width: 28px;
+                height: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 页面标题 -->
+    <h1 class="main-title">📝 简易笔记本</h1>
+
+    <div class="container">
+        <!-- 左侧面板 - 笔记列表 -->
+        <div class="sidebar">
+            <h2 class="panel-title">
+                📋 我的笔记
+            </h2>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" id="searchInput" placeholder="搜索笔记内容...">
+                <span class="search-icon">🔍</span>
+            </div>
+
+            <!-- 新建笔记按钮 -->
+            <button class="new-note-btn" id="newNoteBtn">
+                ➕ 新建笔记
+            </button>
+
+            <!-- 笔记列表 -->
+            <div class="notes-list" id="notesList">
+                <!-- 空状态 -->
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon">📝</div>
+                    <div class="empty-text">还没有任何笔记</div>
+                    <div class="empty-hint">点击"新建笔记"开始记录你的想法</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧面板 - 编辑器 -->
+        <div class="editor-panel">
+            <!-- 欢迎界面 -->
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-icon">✍️</div>
+                <h2 class="welcome-title">欢迎使用简易笔记本</h2>
+                <p class="welcome-text">开始记录你的想法和灵感</p>
+                <p class="welcome-hint">选择一个笔记开始编辑，或创建新笔记</p>
+            </div>
+
+            <!-- 编辑器界面 -->
+            <div class="editor-interface" id="editorInterface" style="display: none; height: 100%; flex-direction: column;">
+                <!-- 编辑器头部 -->
+                <div class="editor-header">
+                    <div class="editor-title">编辑笔记</div>
+                    <div class="editor-actions">
+                        <button class="btn btn-primary" id="saveBtn">
+                            💾 保存
+                        </button>
+                        <button class="btn btn-danger" id="deleteBtn">
+                            🗑️ 删除
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 笔记标题输入 -->
+                <input type="text" class="note-title-input" id="noteTitleInput" placeholder="输入笔记标题...">
+
+                <!-- 格式化工具条 -->
+                <div class="formatting-toolbar" id="formattingToolbar">
+                    <!-- 文本格式组 -->
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="boldBtn" title="加粗" onclick="formatText('bold')">
+                            <strong>B</strong>
+                        </button>
+                        <button class="toolbar-btn" id="italicBtn" title="斜体" onclick="formatText('italic')">
+                            <em>I</em>
+                        </button>
+                        <button class="toolbar-btn" id="underlineBtn" title="下划线" onclick="formatText('underline')">
+                            <u>U</u>
+                        </button>
+                        <button class="toolbar-btn" id="strikeBtn" title="删除线" onclick="formatText('strikeThrough')">
+                            <s>S</s>
+                        </button>
+                    </div>
+
+                    <!-- 字体大小组 -->
+                    <div class="toolbar-group">
+                        <select class="toolbar-select" id="fontSizeSelect" onchange="changeFontSize(this.value)">
+                            <option value="12px">12px</option>
+                            <option value="14px">14px</option>
+                            <option value="16px" selected>16px</option>
+                            <option value="18px">18px</option>
+                            <option value="20px">20px</option>
+                            <option value="24px">24px</option>
+                            <option value="28px">28px</option>
+                            <option value="32px">32px</option>
+                        </select>
+                    </div>
+
+                    <!-- 标题格式组 -->
+                    <div class="toolbar-group">
+                        <select class="toolbar-select" id="headingSelect" onchange="formatHeading(this.value)">
+                            <option value="">正文</option>
+                            <option value="h1">标题 1</option>
+                            <option value="h2">标题 2</option>
+                            <option value="h3">标题 3</option>
+                        </select>
+                    </div>
+
+                    <!-- 颜色组 -->
+                    <div class="toolbar-group">
+                        <div class="color-picker" id="textColorPicker" title="文字颜色" onclick="document.getElementById('textColorInput').click()">
+                        </div>
+                        <input type="color" class="color-input" id="textColorInput" value="#000000" onchange="changeTextColor(this.value)">
+                        
+                        <div class="color-picker" id="bgColorPicker" title="背景颜色" onclick="document.getElementById('bgColorInput').click()" style="background: #ffff00;">
+                        </div>
+                        <input type="color" class="color-input" id="bgColorInput" value="#ffff00" onchange="changeBackgroundColor(this.value)">
+                    </div>
+
+                    <!-- 列表组 -->
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="bulletListBtn" title="无序列表" onclick="formatText('insertUnorderedList')">
+                            •
+                        </button>
+                        <button class="toolbar-btn" id="numberListBtn" title="有序列表" onclick="formatText('insertOrderedList')">
+                            1.
+                        </button>
+                    </div>
+
+                    <!-- 对齐组 -->
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="alignLeftBtn" title="左对齐" onclick="formatText('justifyLeft')">
+                            ⬅
+                        </button>
+                        <button class="toolbar-btn" id="alignCenterBtn" title="居中对齐" onclick="formatText('justifyCenter')">
+                            ↔
+                        </button>
+                        <button class="toolbar-btn" id="alignRightBtn" title="右对齐" onclick="formatText('justifyRight')">
+                            ➡
+                        </button>
+                    </div>
+
+                    <!-- 其他功能组 -->
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="linkBtn" title="插入链接" onclick="insertLink()">
+                            🔗
+                        </button>
+                        <button class="toolbar-btn" id="quoteBtn" title="引用" onclick="formatText('formatBlock', 'blockquote')">
+                            "
+                        </button>
+                        <button class="toolbar-btn" id="clearBtn" title="清除格式" onclick="formatText('removeFormat')">
+                            🧹
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 笔记内容编辑器 -->
+                <div class="note-content-editor rich-editor" id="noteContentEditor" contenteditable="true" placeholder="在这里开始写你的笔记..."></div>
+
+                <!-- 状态指示器 -->
+                <div class="status-indicator" id="statusIndicator">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">已保存</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示消息 -->
+    <div class="toast" id="toast"></div>
+    <script>
+        // 全局变量
+        let notes = [];
+        let currentNoteId = null;
+        let autoSaveTimer = null;
+        let searchQuery = '';
+
+        // DOM元素
+        const searchInput = document.getElementById('searchInput');
+        const newNoteBtn = document.getElementById('newNoteBtn');
+        const notesList = document.getElementById('notesList');
+        const emptyState = document.getElementById('emptyState');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const editorInterface = document.getElementById('editorInterface');
+        const noteTitleInput = document.getElementById('noteTitleInput');
+        const noteContentEditor = document.getElementById('noteContentEditor');
+        const saveBtn = document.getElementById('saveBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const toast = document.getElementById('toast');
+
+        // 初始化应用
+        function init() {
+            loadNotesFromStorage();
+            renderNotesList();
+            setupEventListeners();
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            newNoteBtn.addEventListener('click', createNewNote);
+            searchInput.addEventListener('input', handleSearch);
+            noteTitleInput.addEventListener('input', handleTitleChange);
+            noteContentEditor.addEventListener('input', handleContentChange);
+            noteContentEditor.addEventListener('paste', handlePaste);
+            saveBtn.addEventListener('click', saveCurrentNote);
+            deleteBtn.addEventListener('click', deleteCurrentNote);
+            
+            // 监听编辑器选择变化，更新工具栏状态
+            noteContentEditor.addEventListener('mouseup', updateToolbarState);
+            noteContentEditor.addEventListener('keyup', updateToolbarState);
+        }
+
+        // 创建新笔记
+        function createNewNote() {
+            const newNote = {
+                id: Date.now().toString(),
+                title: '无标题笔记',
+                content: '',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            notes.unshift(newNote);
+            saveNotesToStorage();
+            renderNotesList();
+            selectNote(newNote.id);
+            
+            // 聚焦到标题输入框
+            setTimeout(() => {
+                noteTitleInput.focus();
+                noteTitleInput.select();
+            }, 100);
+
+            showToast('新笔记创建成功！');
+        }
+
+        // 选择笔记
+        function selectNote(noteId) {
+            const note = notes.find(n => n.id === noteId);
+            if (!note) return;
+
+            currentNoteId = noteId;
+            
+            // 更新界面
+            welcomeScreen.style.display = 'none';
+            editorInterface.style.display = 'flex';
+            
+            // 填充内容
+            noteTitleInput.value = note.title;
+            noteContentEditor.innerHTML = note.content || '';
+            
+            // 更新笔记列表选中状态
+            updateNoteSelection();
+            
+            // 重置状态
+            updateStatus('已保存');
+            
+            // 更新工具栏状态
+            updateToolbarState();
+        }
+        // 处理标题变化
+        function handleTitleChange() {
+            if (!currentNoteId) return;
+            
+            const note = notes.find(n => n.id === currentNoteId);
+            if (!note) return;
+            
+            note.title = noteTitleInput.value.trim() || '无标题笔记';
+            note.updatedAt = new Date().toISOString();
+            
+            renderNotesList();
+            updateNoteSelection();
+            scheduleAutoSave();
+        }
+
+        // 处理内容变化
+        function handleContentChange() {
+            if (!currentNoteId) return;
+            
+            const note = notes.find(n => n.id === currentNoteId);
+            if (!note) return;
+            
+            note.content = noteContentEditor.innerHTML;
+            note.updatedAt = new Date().toISOString();
+            
+            renderNotesList();
+            scheduleAutoSave();
+        }
+
+        // 处理粘贴事件
+        function handlePaste(e) {
+            e.preventDefault();
+            const text = e.clipboardData.getData('text/plain');
+            document.execCommand('insertText', false, text);
+        }
+
+        // 计划自动保存
+        function scheduleAutoSave() {
+            updateStatus('正在输入...', true);
+            
+            if (autoSaveTimer) {
+                clearTimeout(autoSaveTimer);
+            }
+            
+            autoSaveTimer = setTimeout(() => {
+                saveCurrentNote();
+            }, 1000); // 1秒后自动保存
+        }
+
+        // 保存当前笔记
+        function saveCurrentNote() {
+            if (!currentNoteId) return;
+            
+            if (autoSaveTimer) {
+                clearTimeout(autoSaveTimer);
+                autoSaveTimer = null;
+            }
+            
+            saveNotesToStorage();
+            updateStatus('已保存');
+            showToast('笔记保存成功！');
+        }
+
+        // 删除当前笔记
+        function deleteCurrentNote() {
+            if (!currentNoteId) return;
+            
+            const note = notes.find(n => n.id === currentNoteId);
+            if (!note) return;
+            
+            if (!confirm(`确定要删除笔记"${note.title}"吗？删除后无法恢复。`)) {
+                return;
+            }
+            
+            notes = notes.filter(n => n.id !== currentNoteId);
+            saveNotesToStorage();
+            renderNotesList();
+            
+            // 重置编辑器
+            currentNoteId = null;
+            welcomeScreen.style.display = 'flex';
+            editorInterface.style.display = 'none';
+            
+            showToast('笔记删除成功');
+        }
+
+        // 处理搜索
+        function handleSearch() {
+            searchQuery = searchInput.value.trim().toLowerCase();
+            renderNotesList();
+        }
+        // 渲染笔记列表
+        function renderNotesList() {
+            let filteredNotes = notes;
+            
+            // 按搜索关键词过滤
+            if (searchQuery) {
+                filteredNotes = notes.filter(note => {
+                    const plainContent = stripHtml(note.content || '');
+                    return note.title.toLowerCase().includes(searchQuery) ||
+                           plainContent.toLowerCase().includes(searchQuery);
+                });
+            }
+            
+            if (filteredNotes.length === 0) {
+                if (searchQuery) {
+                    notesList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">🔍</div>
+                            <div class="empty-text">没有找到匹配的笔记</div>
+                            <div class="empty-hint">尝试使用其他关键词搜索</div>
+                        </div>
+                    `;
+                } else {
+                    emptyState.style.display = 'block';
+                    notesList.innerHTML = '';
+                    notesList.appendChild(emptyState);
+                }
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            notesList.innerHTML = filteredNotes.map(note => {
+                const updatedDate = new Date(note.updatedAt);
+                const formattedDate = formatDate(updatedDate);
+                const plainContent = stripHtml(note.content || '');
+                const preview = plainContent.substring(0, 100) || '暂无内容';
+                
+                return `
+                    <div class="note-item ${note.id === currentNoteId ? 'active' : ''}" 
+                         onclick="selectNote('${note.id}')">
+                        <div class="note-title">${note.title}</div>
+                        <div class="note-preview">${preview}</div>
+                        <div class="note-meta">
+                            <div class="note-date">
+                                🕒 ${formattedDate}
+                            </div>
+                            <div class="note-actions" onclick="event.stopPropagation()">
+                                <button class="action-btn delete-btn" onclick="deleteNoteById('${note.id}')" title="删除笔记">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 去除HTML标签，获取纯文本
+        function stripHtml(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || '';
+        }
+
+        // 通过ID删除笔记
+        function deleteNoteById(noteId) {
+            const note = notes.find(n => n.id === noteId);
+            if (!note) return;
+            
+            if (!confirm(`确定要删除笔记"${note.title}"吗？`)) {
+                return;
+            }
+            
+            notes = notes.filter(n => n.id !== noteId);
+            saveNotesToStorage();
+            renderNotesList();
+            
+            // 如果删除的是当前编辑的笔记
+            if (noteId === currentNoteId) {
+                currentNoteId = null;
+                welcomeScreen.style.display = 'flex';
+                editorInterface.style.display = 'none';
+            }
+            
+            showToast('笔记删除成功');
+        }
+
+        // 更新笔记选中状态
+        function updateNoteSelection() {
+            const noteItems = document.querySelectorAll('.note-item');
+            noteItems.forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            if (currentNoteId) {
+                const activeItem = document.querySelector(`[onclick="selectNote('${currentNoteId}')"]`);
+                if (activeItem) {
+                    activeItem.classList.add('active');
+                }
+            }
+        }
+        // 更新状态指示器
+        function updateStatus(text, isSaving = false) {
+            statusText.textContent = text;
+            statusDot.classList.toggle('saving', isSaving);
+        }
+
+        // 格式化日期
+        function formatDate(date) {
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (minutes < 1) return '刚刚';
+            if (minutes < 60) return `${minutes}分钟前`;
+            if (hours < 24) return `${hours}小时前`;
+            if (days < 7) return `${days}天前`;
+            
+            return date.toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        // 显示提示消息
+        function showToast(message, type = 'success') {
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // 数据持久化
+        function saveNotesToStorage() {
+            localStorage.setItem('simpleNotepad_notes', JSON.stringify(notes));
+        }
+
+        function loadNotesFromStorage() {
+            const stored = localStorage.getItem('simpleNotepad_notes');
+            if (stored) {
+                try {
+                    notes = JSON.parse(stored);
+                } catch (e) {
+                    console.error('加载笔记数据失败:', e);
+                    notes = [];
+                }
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+
+        // 页面卸载前保存
+        window.addEventListener('beforeunload', () => {
+            if (currentNoteId && autoSaveTimer) {
+                saveCurrentNote();
+            }
+        });
+
+        // 富文本编辑功能
+        function formatText(command, value = null) {
+            noteContentEditor.focus();
+            document.execCommand(command, false, value);
+            updateToolbarState();
+            handleContentChange();
+        }
+
+        function changeFontSize(size) {
+            noteContentEditor.focus();
+            document.execCommand('fontSize', false, '7');
+            const fontElements = noteContentEditor.querySelectorAll('font[size="7"]');
+            fontElements.forEach(el => {
+                el.removeAttribute('size');
+                el.style.fontSize = size;
+            });
+            handleContentChange();
+        }
+
+        function formatHeading(tag) {
+            noteContentEditor.focus();
+            if (tag) {
+                document.execCommand('formatBlock', false, tag);
+            } else {
+                document.execCommand('formatBlock', false, 'div');
+            }
+            handleContentChange();
+        }
+
+        function changeTextColor(color) {
+            noteContentEditor.focus();
+            document.execCommand('foreColor', false, color);
+            document.getElementById('textColorPicker').style.background = color;
+            handleContentChange();
+        }
+
+        function changeBackgroundColor(color) {
+            noteContentEditor.focus();
+            document.execCommand('backColor', false, color);
+            document.getElementById('bgColorPicker').style.background = color;
+            handleContentChange();
+        }
+
+        function insertLink() {
+            const url = prompt('请输入链接地址:');
+            if (url) {
+                noteContentEditor.focus();
+                document.execCommand('createLink', false, url);
+                handleContentChange();
+            }
+        }
+
+        function updateToolbarState() {
+            // 更新格式按钮状态
+            const commands = ['bold', 'italic', 'underline', 'strikeThrough'];
+            commands.forEach(cmd => {
+                const btn = document.getElementById(cmd + 'Btn');
+                if (btn) {
+                    btn.classList.toggle('active', document.queryCommandState(cmd));
+                }
+            });
+
+            // 更新对齐按钮状态
+            const alignCommands = ['justifyLeft', 'justifyCenter', 'justifyRight'];
+            alignCommands.forEach(cmd => {
+                const btn = document.getElementById(cmd.replace('justify', 'align') + 'Btn');
+                if (btn) {
+                    btn.classList.toggle('active', document.queryCommandState(cmd));
+                }
+            });
+
+            // 更新列表按钮状态
+            const listBtn1 = document.getElementById('bulletListBtn');
+            const listBtn2 = document.getElementById('numberListBtn');
+            if (listBtn1) listBtn1.classList.toggle('active', document.queryCommandState('insertUnorderedList'));
+            if (listBtn2) listBtn2.classList.toggle('active', document.queryCommandState('insertOrderedList'));
+        }
+    </script>
+</body>
+</html>
