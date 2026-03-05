@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON 格式化工具</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 顶部标题栏 */
+        .header {
+            background: linear-gradient(90deg, #ff9a9e 0%, #fecfef 100%);
+            color: white;
+            padding: 20px;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .back-button {
+            position: absolute;
+            left: 0;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateX(-2px);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+
+        /* 主要内容区域 */
+        .main-content {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* 左侧输入区域 */
+        .input-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #f0f0f0;
+        }
+
+        .section-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .json-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 20px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            background: #fafafa;
+            color: #333;
+        }
+
+        /* 右侧输出区域 */
+        .output-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .json-output {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: white;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            color: #333;
+        }
+
+        /* 错误提示区域 */
+        .error-section {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px 20px;
+            margin: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .error-section.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        .error-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .error-message {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+
+        /* JSON语法高亮样式 */
+        .json-key {
+            color: #0066cc;
+            font-weight: 600;
+        }
+
+        .json-string {
+            color: #009900;
+        }
+
+        .json-number {
+            color: #cc6600;
+        }
+
+        .json-boolean {
+            color: #9900cc;
+            font-weight: 600;
+        }
+
+        .json-null {
+            color: #999999;
+            font-weight: 600;
+        }
+
+        .json-punctuation {
+            color: #666666;
+        }
+
+        /* 状态指示器 */
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-valid {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-invalid {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-empty {
+            background: #e2e3e5;
+            color: #6c757d;
+        }
+
+        /* 响应式设计 - 手机端 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                height: calc(100vh - 20px);
+                border-radius: 12px;
+            }
+
+            .header {
+                padding: 15px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .back-button {
+                position: static;
+                align-self: flex-start;
+                font-size: 13px;
+                padding: 6px 12px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .toolbar {
+                padding: 10px 15px;
+                gap: 10px;
+            }
+
+            .btn {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+
+            .main-content {
+                flex-direction: column;
+            }
+
+            .input-section {
+                border-right: none;
+                border-bottom: 2px solid #f0f0f0;
+                max-height: 40%;
+            }
+
+            .output-section {
+                max-height: 60%;
+            }
+
+            .json-input {
+                font-size: 16px; /* 防止iOS缩放 */
+            }
+
+            .error-section {
+                margin: 10px;
+                padding: 12px 15px;
+            }
+        }
+
+        /* 滚动条样式 */
+        .json-input::-webkit-scrollbar,
+        .json-output::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .json-input::-webkit-scrollbar-track,
+        .json-output::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .json-input::-webkit-scrollbar-thumb,
+        .json-output::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .json-input::-webkit-scrollbar-thumb:hover,
+        .json-output::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* 动画效果 */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .btn:active {
+            animation: pulse 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部标题栏 -->
+        <div class="header">
+            <div class="header-content">
+                <button class="back-button" onclick="window.location.href='../index.html'">
+                    ← 返回首页
+                </button>
+                <h1>🔧 JSON 格式化工具</h1>
+            </div>
+        </div>
+
+        <!-- 工具栏 -->
+        <div class="toolbar">
+            <button class="btn btn-primary" onclick="formatJSON()">
+                ✨ 格式化
+            </button>
+            <button class="btn btn-secondary" onclick="compressJSON()">
+                📦 压缩
+            </button>
+            <button class="btn btn-success" onclick="validateJSON()">
+                ✅ 验证
+            </button>
+            <button class="btn btn-warning" onclick="clearAll()">
+                🗑️ 清空
+            </button>
+            
+            <div class="status-indicator status-empty" id="statusIndicator">
+                <span>⚪</span>
+                <span>等待输入</span>
+            </div>
+        </div>
+
+        <!-- 错误提示区域 -->
+        <div class="error-section" id="errorSection">
+            <div class="error-title">
+                <span>❌</span>
+                <span>JSON 格式错误</span>
+            </div>
+            <div class="error-message" id="errorMessage"></div>
+        </div>
+
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <!-- 左侧输入区域 -->
+            <div class="input-section">
+                <div class="section-header">
+                    📝 JSON 输入
+                </div>
+                <textarea 
+                    class="json-input" 
+                    id="jsonInput" 
+                    placeholder="在这里粘贴你的 JSON 数据...
+
+示例：
+{
+  &quot;name&quot;: &quot;张三&quot;,
+  &quot;age&quot;: 25,
+  &quot;city&quot;: &quot;北京&quot;,
+  &quot;hobbies&quot;: [&quot;读书&quot;, &quot;游泳&quot;, &quot;编程&quot;],
+  &quot;isStudent&quot;: false,
+  &quot;address&quot;: null
+}
+
+支持功能：
+• 自动格式化和美化
+• 语法高亮显示
+• 错误检测和提示
+• JSON 压缩
+• 一键清空"></textarea>
+            </div>
+
+            <!-- 右侧输出区域 -->
+            <div class="output-section">
+                <div class="section-header">
+                    👀 格式化输出
+                </div>
+                <div class="json-output" id="jsonOutput">
+                    <!-- 格式化后的JSON将在这里显示 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const jsonInput = document.getElementById('jsonInput');
+        const jsonOutput = document.getElementById('jsonOutput');
+        const errorSection = document.getElementById('errorSection');
+        const errorMessage = document.getElementById('errorMessage');
+        const statusIndicator = document.getElementById('statusIndicator');
+
+        // 格式化JSON函数
+        function formatJSON() {
+            const inputText = jsonInput.value.trim();
+            
+            if (!inputText) {
+                showError('请输入JSON数据');
+                return;
+            }
+
+            try {
+                // 解析JSON
+                const jsonObj = JSON.parse(inputText);
+                
+                // 格式化JSON（缩进2个空格）
+                const formattedJSON = JSON.stringify(jsonObj, null, 2);
+                
+                // 应用语法高亮
+                const highlightedJSON = highlightJSON(formattedJSON);
+                
+                // 显示结果
+                jsonOutput.innerHTML = highlightedJSON;
+                
+                // 隐藏错误提示
+                hideError();
+                
+                // 更新状态
+                updateStatus('valid', '✅ JSON 有效');
+                
+            } catch (error) {
+                showError(error.message);
+                updateStatus('invalid', '❌ JSON 无效');
+            }
+        }
+
+        // 压缩JSON函数
+        function compressJSON() {
+            const inputText = jsonInput.value.trim();
+            
+            if (!inputText) {
+                showError('请输入JSON数据');
+                return;
+            }
+
+            try {
+                // 解析JSON
+                const jsonObj = JSON.parse(inputText);
+                
+                // 压缩JSON（无缩进）
+                const compressedJSON = JSON.stringify(jsonObj);
+                
+                // 应用语法高亮
+                const highlightedJSON = highlightJSON(compressedJSON);
+                
+                // 显示结果
+                jsonOutput.innerHTML = highlightedJSON;
+                
+                // 隐藏错误提示
+                hideError();
+                
+                // 更新状态
+                updateStatus('valid', '✅ JSON 已压缩');
+                
+            } catch (error) {
+                showError(error.message);
+                updateStatus('invalid', '❌ JSON 无效');
+            }
+        }
+
+        // 验证JSON函数
+        function validateJSON() {
+            const inputText = jsonInput.value.trim();
+            
+            if (!inputText) {
+                showError('请输入JSON数据');
+                return;
+            }
+
+            try {
+                // 尝试解析JSON
+                JSON.parse(inputText);
+                
+                // 如果成功，显示成功消息
+                jsonOutput.innerHTML = '<div style="color: #28a745; font-size: 18px; text-align: center; padding: 40px;"><div style="font-size: 48px; margin-bottom: 20px;">✅</div><div>JSON 格式正确！</div><div style="font-size: 14px; color: #6c757d; margin-top: 10px;">可以点击"格式化"按钮查看美化后的结果</div></div>';
+                
+                // 隐藏错误提示
+                hideError();
+                
+                // 更新状态
+                updateStatus('valid', '✅ JSON 有效');
+                
+            } catch (error) {
+                showError(error.message);
+                updateStatus('invalid', '❌ JSON 无效');
+            }
+        }
+
+        // 清空所有内容
+        function clearAll() {
+            jsonInput.value = '';
+            jsonOutput.innerHTML = '';
+            hideError();
+            updateStatus('empty', '⚪ 等待输入');
+        }
+
+        // JSON语法高亮函数
+        function highlightJSON(jsonString) {
+            // 转义HTML字符
+            jsonString = jsonString.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            
+            // 高亮不同的JSON元素
+            return jsonString
+                // 字符串（键和值）
+                .replace(/(".*?")\s*:/g, '<span class="json-key">$1</span><span class="json-punctuation">:</span>')
+                .replace(/:\s*(".*?")/g, ': <span class="json-string">$1</span>')
+                // 数字
+                .replace(/:\s*(-?\d+\.?\d*)/g, ': <span class="json-number">$1</span>')
+                // 布尔值
+                .replace(/:\s*(true|false)/g, ': <span class="json-boolean">$1</span>')
+                // null值
+                .replace(/:\s*(null)/g, ': <span class="json-null">$1</span>')
+                // 数组中的字符串
+                .replace(/,\s*(".*?")/g, ', <span class="json-string">$1</span>')
+                .replace(/\[\s*(".*?")/g, '[<span class="json-string">$1</span>')
+                // 数组中的数字
+                .replace(/,\s*(-?\d+\.?\d*)/g, ', <span class="json-number">$1</span>')
+                .replace(/\[\s*(-?\d+\.?\d*)/g, '[<span class="json-number">$1</span>')
+                // 数组中的布尔值
+                .replace(/,\s*(true|false)/g, ', <span class="json-boolean">$1</span>')
+                .replace(/\[\s*(true|false)/g, '[<span class="json-boolean">$1</span>')
+                // 数组中的null
+                .replace(/,\s*(null)/g, ', <span class="json-null">$1</span>')
+                .replace(/\[\s*(null)/g, '[<span class="json-null">$1</span>')
+                // 标点符号
+                .replace(/([{}[\],])/g, '<span class="json-punctuation">$1</span>');
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorSection.classList.add('show');
+        }
+
+        // 隐藏错误信息
+        function hideError() {
+            errorSection.classList.remove('show');
+        }
+
+        // 更新状态指示器
+        function updateStatus(type, text) {
+            statusIndicator.className = `status-indicator status-${type}`;
+            statusIndicator.innerHTML = `<span>${type === 'valid' ? '✅' : type === 'invalid' ? '❌' : '⚪'}</span><span>${text}</span>`;
+        }
+
+        // 监听输入变化，实时验证
+        jsonInput.addEventListener('input', function() {
+            const inputText = this.value.trim();
+            
+            if (!inputText) {
+                updateStatus('empty', '⚪ 等待输入');
+                hideError();
+                return;
+            }
+
+            try {
+                JSON.parse(inputText);
+                updateStatus('valid', '✅ JSON 有效');
+                hideError();
+            } catch (error) {
+                updateStatus('invalid', '❌ JSON 无效');
+            }
+        });
+
+        // 支持Tab键缩进功能
+        jsonInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                
+                // 获取光标位置
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                
+                // 在光标位置插入Tab字符（用2个空格代替）
+                this.value = this.value.substring(0, start) + '  ' + this.value.substring(end);
+                
+                // 重新设置光标位置
+                this.selectionStart = this.selectionEnd = start + 2;
+            }
+        });
+
+        // 支持Ctrl+Enter快捷键格式化
+        jsonInput.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                formatJSON();
+            }
+        });
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus('empty', '⚪ 等待输入');
+        });
+    </script>
+</body>
+</html>
