@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown 预览器</title>
+    <!-- 引入marked.js库用于Markdown解析 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 顶部标题栏 */
+        .header {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .back-button {
+            position: absolute;
+            left: 0;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateX(-2px);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* 主要内容区域 */
+        .main-content {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* 左侧输入区域 */
+        .input-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #f0f0f0;
+        }
+
+        .input-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .markdown-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 20px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            background: #fafafa;
+            color: #333;
+        }
+
+        /* 右侧预览区域 */
+        .preview-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .markdown-preview {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: white;
+        }
+
+        /* Markdown预览样式 */
+        .markdown-preview h1,
+        .markdown-preview h2,
+        .markdown-preview h3,
+        .markdown-preview h4,
+        .markdown-preview h5,
+        .markdown-preview h6 {
+            margin: 20px 0 10px 0;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .markdown-preview h1 { font-size: 28px; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .markdown-preview h2 { font-size: 24px; border-bottom: 1px solid #bdc3c7; padding-bottom: 8px; }
+        .markdown-preview h3 { font-size: 20px; }
+        .markdown-preview h4 { font-size: 18px; }
+        .markdown-preview h5 { font-size: 16px; }
+        .markdown-preview h6 { font-size: 14px; }
+
+        .markdown-preview p {
+            margin: 15px 0;
+            line-height: 1.7;
+            color: #34495e;
+        }
+
+        .markdown-preview ul,
+        .markdown-preview ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        .markdown-preview li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+
+        .markdown-preview blockquote {
+            border-left: 4px solid #3498db;
+            margin: 20px 0;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            color: #555;
+            font-style: italic;
+        }
+
+        .markdown-preview code {
+            background: #f1f2f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            color: #e74c3c;
+        }
+
+        .markdown-preview pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .markdown-preview pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+
+        .markdown-preview table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .markdown-preview th,
+        .markdown-preview td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .markdown-preview th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .markdown-preview a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .markdown-preview a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-preview hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(90deg, #3498db, #9b59b6);
+            margin: 30px 0;
+            border-radius: 1px;
+        }
+
+        /* 响应式设计 - 手机端 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                height: calc(100vh - 20px);
+                border-radius: 12px;
+            }
+
+            .header {
+                padding: 15px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .back-button {
+                position: static;
+                align-self: flex-start;
+                font-size: 13px;
+                padding: 6px 12px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .main-content {
+                flex-direction: column;
+            }
+
+            .input-section {
+                border-right: none;
+                border-bottom: 2px solid #f0f0f0;
+                max-height: 40%;
+            }
+
+            .preview-section {
+                max-height: 60%;
+            }
+
+            .markdown-input {
+                font-size: 16px; /* 防止iOS缩放 */
+            }
+        }
+
+        /* 滚动条样式 */
+        .markdown-input::-webkit-scrollbar,
+        .markdown-preview::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .markdown-input::-webkit-scrollbar-track,
+        .markdown-preview::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .markdown-input::-webkit-scrollbar-thumb,
+        .markdown-preview::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .markdown-input::-webkit-scrollbar-thumb:hover,
+        .markdown-preview::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部标题栏 -->
+        <div class="header">
+            <div class="header-content">
+                <button class="back-button" onclick="window.location.href='../index.html'">
+                    ← 返回首页
+                </button>
+                <h1>📝 Markdown 预览器</h1>
+            </div>
+        </div>
+
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <!-- 左侧输入区域 -->
+            <div class="input-section">
+                <div class="input-header">
+                    ✏️ Markdown 输入
+                </div>
+                <textarea 
+                    class="markdown-input" 
+                    id="markdownInput" 
+                    placeholder="在这里输入你的 Markdown 内容...
+
+# 欢迎使用 Markdown 预览器！
+
+## 支持的语法
+
+### 标题
+使用 # 来创建标题
+
+### 文本样式
+- **粗体文本**
+- *斜体文本*
+- ~~删除线~~
+
+### 列表
+1. 有序列表项 1
+2. 有序列表项 2
+
+- 无序列表项
+- 另一个列表项
+
+### 引用
+> 这是一个引用块
+> 可以包含多行内容
+
+### 代码
+行内代码：`console.log('Hello World')`
+
+代码块：
+```javascript
+function hello() {
+    console.log('Hello, Markdown!');
+}
+```
+
+### 链接和图片
+[链接文本](https://example.com)
+
+### 表格
+| 列1 | 列2 | 列3 |
+|-----|-----|-----|
+| 数据1 | 数据2 | 数据3 |
+| 数据4 | 数据5 | 数据6 |
+
+---
+
+开始编辑，右侧会实时显示预览效果！"></textarea>
+            </div>
+
+            <!-- 右侧预览区域 -->
+            <div class="preview-section">
+                <div class="preview-header">
+                    👀 实时预览
+                </div>
+                <div class="markdown-preview" id="markdownPreview">
+                    <!-- 预览内容将在这里显示 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const markdownInput = document.getElementById('markdownInput');
+        const markdownPreview = document.getElementById('markdownPreview');
+
+        // 更新预览内容的函数
+        function updatePreview() {
+            const markdownText = markdownInput.value;
+            
+            // 使用marked.js将Markdown转换为HTML
+            const htmlContent = marked.parse(markdownText);
+            
+            // 将转换后的HTML显示在预览区域
+            markdownPreview.innerHTML = htmlContent;
+        }
+
+        // 监听输入框的变化，实时更新预览
+        markdownInput.addEventListener('input', updatePreview);
+
+        // 页面加载时初始化预览
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePreview();
+        });
+
+        // 支持Tab键缩进功能
+        markdownInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                
+                // 获取光标位置
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                
+                // 在光标位置插入Tab字符（用4个空格代替）
+                this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+                
+                // 重新设置光标位置
+                this.selectionStart = this.selectionEnd = start + 4;
+            }
+        });
+    </script>
+</body>
+</html>
